@@ -11,10 +11,10 @@ Window {
     color: "lightgrey"
     title: qsTr("REcorderGUI1.0")
 
-
-
-
     //visibility: Window.FullScreen  // НЕ ЗАБЫТЬ ВКЛЮЧИТЬ ПОТОМ!!!!!
+
+
+
 
     Page {
         id: page
@@ -58,7 +58,12 @@ Window {
                     MouseArea {
                             anchors.fill: parent
                             onClicked: {
+
+                                //qwe = appCore.getCams(buttonText.text)
+                                videoModel.deleteCameras()
                                 appCore.getCams(buttonText.text)
+                                videoModel.addCamera()
+                                //videoModel.getConnector()
                             }
                         }
 
@@ -87,8 +92,14 @@ Window {
 
                         Column {
                             anchors.fill: parent
-                            Text { text: pos; anchors.horizontalCenter: parent.horizontalCenter }
+                            Text { text: model.name; anchors.horizontalCenter: parent.horizontalCenter }
                         }
+                        MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    console.log(model.rtsp)
+                                }
+                            }
                     }
                 }
 
@@ -99,21 +110,13 @@ Window {
                 width: parent.width
                 height: parent.height
                 anchors.fill: parent
-                model: gridlist
+                model: videoModel
                 delegate: contactDelegate
                 highlight: Rectangle { color: "lightsteelblue"; radius: 5; Text{} }
 
             }
-        }
-        Connections {
-                target: appCore
 
-                // Обработчик сигнала сложения
-                onGetCam: {
-                    // sum было задано через arguments=['sum']
-                    grid.text = getCams
-                }
-            }
+        }
 }
 
 }

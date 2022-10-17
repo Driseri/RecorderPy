@@ -14,8 +14,6 @@ Window {
     //visibility: Window.FullScreen  // НЕ ЗАБЫТЬ ВКЛЮЧИТЬ ПОТОМ!!!!!
 
 
-
-
     Page {
         id: page
         anchors.fill: parent

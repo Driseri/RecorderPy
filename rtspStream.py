@@ -1,5 +1,7 @@
 import cv2
+import time
 
+time1 = time.perf_counter()
 #'rtsp://172.18.191.72:554/Streaming/Channels/1'
 
 cap = cv2.VideoCapture('rtsp://172.18.191.72:554/Streaming/Channels/1')
@@ -10,8 +12,9 @@ fps = 35
 out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'),fps, frame_size)
 
 while(cap.isOpened()):
+    time2 = time.perf_counter()
     ret, frame = cap.read()
-    if ret==True:
+    if ret == True and (time2-time1) < 2:
         # write the flipped frame
         out.write(frame)
 

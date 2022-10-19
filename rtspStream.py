@@ -4,7 +4,7 @@ import time
 time1 = time.perf_counter()
 #'rtsp://172.18.191.72:554/Streaming/Channels/1'
 
-cap = cv2.VideoCapture('rtsp://172.18.191.38:554/Streaming/Channels/1')
+cap = cv2.VideoCapture('rtsp://172.18.191.12:554/stream/main')
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 frame_size = (frame_width,frame_height)

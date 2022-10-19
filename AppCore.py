@@ -4,8 +4,13 @@ import os
 import psutil
 from PySide2.QtCore import QObject, QAbstractListModel, Qt, Slot, Signal, QModelIndex, Property
 from pprint import pprint
-DISK = "C:"
-ROOMS_FILE = "db-rooms.json"
+import configparser
+
+config = configparser.ConfigParser()
+config.read("config.ini")
+
+DISK = config["main"]["disk"]
+ROOMS_FILE = config["main"]["cameras"]
 
 
 

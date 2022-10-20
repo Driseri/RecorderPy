@@ -4,7 +4,7 @@ import time
 time1 = time.perf_counter()
 #'rtsp://172.18.191.72:554/Streaming/Channels/1'
 try:
-    cap = cv2.VideoCapture('rtsp://172.18.191.12:554/stream/main')
+    cap = cv2.VideoCapture('rtsp://172.18.191.84:554/live/0/MAIN')
 except:
     print('\n\n\n\nНе подключился к камере\n\n\n\n')
 frame_width = int(cap.get(3))

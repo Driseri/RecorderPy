@@ -3,13 +3,16 @@ import time
 
 time1 = time.perf_counter()
 #'rtsp://172.18.191.72:554/Streaming/Channels/1'
-
-cap = cv2.VideoCapture('rtsp://172.18.191.12:554/stream/main')
+try:
+    cap = cv2.VideoCapture('rtsp://172.18.191.12:554/stream/main')
+except:
+    print('\n\n\n\nНе подключился к камере\n\n\n\n')
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 frame_size = (frame_width,frame_height)
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
 fps = 35
-out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M','J','P','G'),fps, frame_size)
+out = cv2.VideoWriter('output.', cv2.VideoWriter_fourcc('M','J','P','G'),fps, frame_size)
 
 while(cap.isOpened()):
     time2 = time.perf_counter()

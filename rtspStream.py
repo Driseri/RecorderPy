@@ -1,7 +1,7 @@
 import cv2
 import time
 
-# time1 = time.perf_counter()
+time1 = time.perf_counter()
 # #'rtsp://172.18.191.72:554/Streaming/Channels/1'
 # try:
 #     cap = cv2.VideoCapture('rtsp://172.18.191.84:554/live/0/MAIN')
@@ -34,9 +34,24 @@ import time
 
 
 vcap = cv2.VideoCapture("rtsp://172.18.191.85:554/Streaming/Channels/1")
+# vcap = cv2.VideoCapture("Мужчина.avi")
+frame_width = int(vcap.get(3))
+frame_height = int(vcap.get(4))
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+frame_size = (frame_width,frame_height)
+out = cv2.VideoWriter('output.avi', fourcc, 20.0, frame_size)
 
 while(1):
-
+    time2 = time.perf_counter()
     ret, frame = vcap.read()
-    cv2.imshow('VIDEO', frame)
-    cv2.waitKey(1)
+    out.write(frame)
+    if time2-time1>2:
+        break
+
+vcap.release()
+
+# After we release our webcam, we also release the output
+out.release()
+
+# De-allocate any associated memory usage
+cv2.destroyAllWindows()

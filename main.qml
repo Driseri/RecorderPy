@@ -95,7 +95,7 @@ Window {
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    console.log(model.rtsp)
+                                    appCore.addSelect(model.rtsp)
                                 }
                             }
                     }
@@ -112,6 +112,43 @@ Window {
                 delegate: contactDelegate
                 highlight: Rectangle { color: "lightsteelblue"; radius: 5; Text{} }
 
+            }
+
+            Rectangle {
+                id: recStart
+                width: parent.width/6
+                height: parent.height/6
+                radius: 5
+                color: "grey"
+                border.width: 2
+                border.color: "black"
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                Text { text: "Запись"; anchors.horizontalCenter: parent.horizontalCenter }
+                MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    appCore.recStart()
+                                }
+                            }
+            }
+            Rectangle {
+                id: recStop
+                width: parent.width/6
+                height: parent.height/6
+                radius: 5
+                color: "grey"
+                border.width: 2
+                border.color: "black"
+                anchors.bottom: parent.bottom
+                anchors.right: recStart.left
+                Text { text: "Остановить запись"; anchors.horizontalCenter: parent.horizontalCenter }
+                MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    appCore.recStop()
+                                }
+                            }
             }
 
         }

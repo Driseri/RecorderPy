@@ -2,9 +2,10 @@ import requests
 import json
 import os
 import psutil
-from PySide2.QtCore import QObject, QAbstractListModel, Qt, Slot, Signal, QModelIndex, Property
-from pprint import pprint
 import configparser
+import cv2
+import time
+from PySide2.QtCore import QObject, QAbstractListModel, Qt, Slot, Signal, QModelIndex, Property
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -90,6 +91,9 @@ class AppCore(QObject):
         self.data = {}
         self.info = {}
         self.connector = connect
+        self.select_rtsp = []
+        self.record = False
+
 
     @Slot(str)
     def getCams(self,str):
@@ -105,6 +109,12 @@ class AppCore(QObject):
 
 
     def getCameras(self) -> dict:
+        with open(ROOMS_FILE, 'r') as file:
+            info = json.loads(file.read())
+            self.info = info
+            return info
+
+    def updateCameras(self) -> None:
         with open(ROOMS_FILE, 'w') as file:
             response = requests.get('https://nvr.miem.hse.ru/api/erudite/equipment',
                                     headers={'key': os.environ.get('ERUDITE_KEY')})
@@ -122,14 +132,63 @@ class AppCore(QObject):
                         "audio": []
                     }
             self.info = info
-            return info
+
+            json.dump(info, file)
+
+    @Slot(str)
+    def addSelect(self, rtsp) -> None:
+        #todo Должно принимать еще всякие названия
+        if rtsp in self.select_rtsp:
+            self.select_rtsp.remove(rtsp)
+        else:
+            self.select_rtsp.append(rtsp)
+        print(self.select_rtsp)
 
 
-    #OpenCV
-    #Goto Отображение Qtvideo/
+    #todo Метод для начала\остановки записи
+    @Slot()
+    def recStart(self):
+        self.record = True
+        self.recordStream('qwe')
+
+    @Slot()
+    def recStop(self):
+        self.record = False
 
     def getFreeSpace(self) -> str:
         free = psutil.disk_usage(DISK).free/(1024*1024*1024)
         return (f"{free:.4} Gb free on disk {DISK}")
 
+
+    def videoNaming(self) -> str:
+        pass
+    #todo Создание имен
+
+
+    def recordStream(self, rtsp) -> None:
+        #todo Дописать запись (Добавить многопоточность)
+        vcap = cv2.VideoCapture(self.select_rtsp[0])
+        frame_width = int(vcap.get(3))
+        frame_height = int(vcap.get(4))
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        frame_size = (frame_width, frame_height)
+        fps = vcap.get(cv2.CAP_PROP_FPS)
+        #out = cv2.VideoWriter('output.avi', fourcc, fps, frame_size)
+
+        # while (1):
+        #     time2 = time.perf_counter()
+        #     ret, frame = vcap.read()
+        #     out.write(frame)
+        #     if time2 - time1 > 10:
+        #         break
+
+        while (vcap.isOpened() and self.record):
+            ret, frame = vcap.read()
+            cv2.imshow('frame', frame)
+            if cv2.waitKey(20) & 0xFF == ord('q'):
+                break
+
+        cv2.destroyAllWindows()
+        vcap.release()
+        #out.release()
 

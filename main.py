@@ -18,7 +18,6 @@ if __name__ == "__main__":
     appCore = AppCore(connector)
     videoModel = VideoModel(connector)
 
-
     #Подгрузка данных камер с API
     data = appCore.getCameras()
 #    models = CamerModel(data)
@@ -44,12 +43,7 @@ if __name__ == "__main__":
 
     engine.rootContext().setContextProperty("videoModel", videoModel)
 
-
-
-
     engine.load(str(qml_file))
-
-
 
     if not engine.rootObjects():
         sys.exit(-1)

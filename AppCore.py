@@ -4,14 +4,37 @@ import os
 import psutil
 import configparser
 import cv2
+from PySide2.QtCore import QObject, QAbstractListModel, Qt, Slot, Signal, QModelIndex, Property, QThread
+from PySide2.QtGui import *
+from threading import Thread
+import threading
+from datetime import datetime
 import time
-from PySide2.QtCore import QObject, QAbstractListModel, Qt, Slot, Signal, QModelIndex, Property
 
 config = configparser.ConfigParser()
 config.read("config.ini")
 
 DISK = config["main"]["disk"]
 ROOMS_FILE = config["main"]["cameras"]
+
+
+#
+# class SingleStream(QThread):
+#     cv2.namedWindow("main", cv2.WINDOW_NORMAL)
+#     cv2.resizeWindow('main', 900, 900)
+#     def __init__(self):
+#         QThread.__init__(self)
+#
+#     def run(self):
+#
+#         while (self.vcap.isOpened() and self.streaming):
+#             ret, frame = self.vcap.read()
+#
+#             cv2.imshow('main', frame)
+#             if cv2.waitKey(20) & 0xFF == ord('q'):
+#                 break
+#
+#         self.vcap.release()
 
 
 
@@ -64,7 +87,7 @@ class VideoModel(QAbstractListModel):
 
 
     def getConnector(self):
-        pprint(self.connector.getList())
+        print(self.connector.getList())
 
     @Slot()
     def addCamera(self):
@@ -84,15 +107,19 @@ class VideoModel(QAbstractListModel):
 
 
 class AppCore(QObject):
-#    listview = Signal(str, arguments=['cam'])
-
     def __init__(self,connect, parent=None):
         super(AppCore, self).__init__(parent)
         self.data = {}
         self.info = {}
         self.connector = connect
         self.select_rtsp = []
-        self.record = False
+        self.streaming = False
+        self.isrecord = False
+        self.vcap = 0
+
+        cv2.namedWindow("main", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('main', 900, 900)
+
 
 
     @Slot(str)
@@ -135,60 +162,117 @@ class AppCore(QObject):
 
             json.dump(info, file)
 
-    @Slot(str)
-    def addSelect(self, rtsp) -> None:
+    @Slot()
+    def setRecord(self):
+        if self.isrecord:
+            self.isrecord = False
+        else:
+            self.isrecord = True
+
+
+    @Slot(str,str)
+    def addSelect(self, rtsp, name) -> None:
         #todo Должно принимать еще всякие названия
         if rtsp in self.select_rtsp:
-            self.select_rtsp.remove(rtsp)
+            self.select_rtsp.remove([rtsp,name])
         else:
-            self.select_rtsp.append(rtsp)
+            self.select_rtsp.append([rtsp,name])
         print(self.select_rtsp)
 
 
-    #todo Метод для начала\остановки записи
-    @Slot()
-    def recStart(self):
-        self.record = True
-        self.recordStream('qwe')
+    #todo Добавить кноку обнуления выбора
+
+
+    @Slot(str,str)
+    def buttonReact(self, rtsp, name):
+        if (self.isrecord):
+            #todo Добавить запись потоков
+            pass
+        else:
+            if (self.streaming):
+                self.vcap = cv2.VideoCapture(rtsp)
+            else:
+                self.vcap = cv2.VideoCapture(rtsp)
+                self.viewStream(rtsp)
+
+
+    def viewStream(self, camera) -> None:
+
+        self.streaming = True
+
+        while (self.vcap.isOpened() and self.streaming):
+            ret, frame = self.vcap.read()
+
+            cv2.imshow('main', frame)
+            if cv2.waitKey(20) & 0xFF == ord('q'):
+                break
+
+        self.vcap.release()
+
 
     @Slot()
     def recStop(self):
-        self.record = False
+        #print("QWEQWEQWE")
+        self.streaming = False
 
     def getFreeSpace(self) -> str:
         free = psutil.disk_usage(DISK).free/(1024*1024*1024)
         return (f"{free:.4} Gb free on disk {DISK}")
 
 
-    def videoNaming(self) -> str:
-        pass
+    def videoNaming(self, name) -> str:
+        time = datetime.now()
+        return("{}-{}-{}-{}:{}-{}".format(time.year, time.month,time.day,time.hour,time.minute,name))
     #todo Создание имен
 
+    @Slot()
+    def StartRecording(self):
+        print("\n\n")
+        for camp in self.select_rtsp:
+            #todo ПОТОКИ СДЕЛАТЬ СРОЧНО!!!!
 
-    def recordStream(self, rtsp) -> None:
+            thr1 = threading.Thread(target=self.recordStream, args=(camp,)).start()
+            #recording = Thread(target=self.videoNaming, args=(camp))
+            #recording.start()
+            #th = Thread(target=self.recordStream, args=())
+
+
+
+
+    def recordStream(self,args) -> None:
         #todo Дописать запись (Добавить многопоточность)
-        vcap = cv2.VideoCapture(self.select_rtsp[0])
+        #todo Масштаб вывода настроить
+
+
+        name = self.videoNaming(args[1])
+        name = name + '.avi'
+        print(args[0])
+        vcap = cv2.VideoCapture(args[0])
         frame_width = int(vcap.get(3))
         frame_height = int(vcap.get(4))
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         frame_size = (frame_width, frame_height)
         fps = vcap.get(cv2.CAP_PROP_FPS)
-        #out = cv2.VideoWriter('output.avi', fourcc, fps, frame_size)
-
-        # while (1):
-        #     time2 = time.perf_counter()
-        #     ret, frame = vcap.read()
-        #     out.write(frame)
-        #     if time2 - time1 > 10:
-        #         break
-
-        while (vcap.isOpened() and self.record):
+        out = cv2.VideoWriter(name, fourcc, fps, frame_size)
+        time1 = time.perf_counter()
+        time2 = time.perf_counter()
+        while (vcap.isOpened() and time2 - time1 < 20):
+            time2 = time.perf_counter()
             ret, frame = vcap.read()
-            cv2.imshow('frame', frame)
-            if cv2.waitKey(20) & 0xFF == ord('q'):
-                break
+            out.write(frame)
 
-        cv2.destroyAllWindows()
+        print(name+'IS OVER')
         vcap.release()
-        #out.release()
+        out.release()
+        # while (vcap.isOpened() and self.isrecord):
+        #     ret, frame = vcap.read()
+        #     #res = cv2.resize(frame, dsize=(500,500), interpolation=cv2.INTER_CUBIC)
+        #     cv2.imshow('main', frame)
+        #     if cv2.waitKey(20) & 0xFF == ord('q'):
+        #         break
+        #
+
+
+
+
 

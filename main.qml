@@ -10,7 +10,12 @@ Window {
     visible: true
     color: "lightgrey"
     title: qsTr("REcorderGUI1.0")
-
+//    Component.onCompleted: {
+//        var component = Qt.createComponent("stream.qml")
+//        var window    = component.createObject(win)
+//        window.show()
+//    }
+    //flags: Qt.Window | Qt.FramelessWindowHint //Включить в финале
     //visibility: Window.FullScreen  // НЕ ЗАБЫТЬ ВКЛЮЧИТЬ ПОТОМ!!!!!
 
 
@@ -56,12 +61,10 @@ Window {
                     MouseArea {
                             anchors.fill: parent
                             onClicked: {
-
-                                //qwe = appCore.getCams(buttonText.text)
+                                appCore.recStop()
                                 videoModel.deleteCameras()
                                 appCore.getCams(buttonText.text)
                                 videoModel.addCamera()
-                                //videoModel.getConnector()
                             }
                         }
 
@@ -95,7 +98,10 @@ Window {
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    appCore.addSelect(model.rtsp)
+                                    appCore.addSelect(model.rtsp, model.name)
+                                    appCore.buttonReact(model.rtsp, model.name)
+                                    //appCore.recStart()
+                                    //parent.color = "yellow"
                                 }
                             }
                     }
@@ -115,41 +121,55 @@ Window {
             }
 
             Rectangle {
-                id: recStart
-                width: parent.width/6
-                height: parent.height/6
-                radius: 5
-                color: "grey"
-                border.width: 2
-                border.color: "black"
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-                Text { text: "Запись"; anchors.horizontalCenter: parent.horizontalCenter }
-                MouseArea {
+                        id: choi
+                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        radius: 5
+                        color: "grey"
+                        border.width: 2
+                        border.color: "black"
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+
+                        Column {
+                            anchors.fill: parent
+                            Text { text: "Выбор для записи"; anchors.horizontalCenter: parent.horizontalCenter }
+                        }
+                        MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    appCore.recStart()
+                                    //appCore.addSelect(model.rtsp)
+                                    //appCore.buttonReact(model.rtsp, model.name)
+                                    //appCore.recStart()
+                                    //parent.color = "yellow"
                                 }
                             }
-            }
+                    }
             Rectangle {
-                id: recStop
-                width: parent.width/6
-                height: parent.height/6
-                radius: 5
-                color: "grey"
-                border.width: 2
-                border.color: "black"
-                anchors.bottom: parent.bottom
-                anchors.right: recStart.left
-                Text { text: "Остановить запись"; anchors.horizontalCenter: parent.horizontalCenter }
-                MouseArea {
+                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        radius: 5
+                        color: "grey"
+                        border.width: 2
+                        border.color: "black"
+                        anchors.right: choi.left
+                        anchors.bottom: parent.bottom
+
+                        Column {
+                            anchors.fill: parent
+                            Text { text: "начало записи"; anchors.horizontalCenter: parent.horizontalCenter }
+                        }
+                        MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    appCore.recStop()
+                                    appCore.StartRecording()
+                                    //appCore.addSelect(model.rtsp)
+                                    //appCore.buttonReact(model.rtsp, model.name)
+                                    //appCore.recStart()
+                                    //parent.color = "yellow"
                                 }
                             }
-            }
+                    }
+
+
 
         }
 }

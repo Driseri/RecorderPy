@@ -132,30 +132,7 @@ Window {
 
                         Column {
                             anchors.fill: parent
-                            Text { text: "Выбор для записи"; anchors.horizontalCenter: parent.horizontalCenter }
-                        }
-                        MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    //appCore.addSelect(model.rtsp)
-                                    //appCore.buttonReact(model.rtsp, model.name)
-                                    //appCore.recStart()
-                                    //parent.color = "yellow"
-                                }
-                            }
-                    }
-            Rectangle {
-                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
-                        radius: 5
-                        color: "grey"
-                        border.width: 2
-                        border.color: "black"
-                        anchors.right: choi.left
-                        anchors.bottom: parent.bottom
-
-                        Column {
-                            anchors.fill: parent
-                            Text { text: "начало записи"; anchors.horizontalCenter: parent.horizontalCenter }
+                            Text { text: "Конец"; anchors.horizontalCenter: parent.horizontalCenter }
                         }
                         MouseArea {
                                 anchors.fill: parent
@@ -168,6 +145,30 @@ Window {
                                 }
                             }
                     }
+//            Rectangle {
+//                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+//                        radius: 5
+//                        color: "grey"
+//                        border.width: 2
+//                        border.color: "black"
+//                        anchors.right: choi.left
+//                        anchors.bottom: parent.bottom
+//
+//                        Column {
+//                            anchors.fill: parent
+//                            Text { text: "Конец записи"; anchors.horizontalCenter: parent.horizontalCenter }
+//                        }
+//                        MouseArea {
+//                                anchors.fill: parent
+//                                onClicked: {
+//                                    appCore.StartRecording()
+//                                    //appCore.addSelect(model.rtsp)
+//                                    //appCore.buttonReact(model.rtsp, model.name)
+//                                    //appCore.recStart()
+//                                    //parent.color = "yellow"
+//                                }
+//                            }
+//                    }
 
 
 

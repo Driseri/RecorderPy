@@ -1,4 +1,3 @@
-#vers1.1.1
 import requests
 import json
 import os
@@ -28,8 +27,34 @@ ROOMS_FILE = config["main"]["cameras"]
 
 
 class SavingStream(QThread):
-    #
-    pass
+    def __init__(self, rtsp, parent =None):
+        super(SavingStream, self).__init__(parent)
+        self.rtsp = rtsp
+        self.isRecord = True
+        try:
+            self.vcap = cv2.VideoCapture(self.rtsp)
+        except:
+            logger.error('Problem in read rtsp (SavingStream)')
+        self.frame_width = int(self.vcap.get(3))
+        self.frame_height = int(self.vcap.get(4))
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.frame_size = (self.frame_width, self.frame_height)
+        self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
+        self.out = cv2.VideoWriter('output1.avi', self.fourcc, self.fps, self.frame_size)
+
+
+    def stopRecording(self):
+        self.isRecord = False
+
+    def run(self):
+        while self.isRecord:
+            ret, frame = self.vcap.read()
+            self.out.write(frame)
+
+        self.vcap.release()
+        self.out.release()
+
+        logger.info('end of recording')
 
 
 
@@ -37,9 +62,9 @@ class SingleStream(QObject):
     '''Отдельнй поток под вывод изображения с камеры'''
     running = False
     newTextAndColor = Signal(ndarray)
-    rtsp = "rtsp://172.18.191.63:554/Streaming/Channels/1"
+    rtsp = ""
 
-    vcap = cv2.VideoCapture(rtsp)
+    vcap = cv2.VideoCapture(0)
     def __init__(self, parent=None):
         super(SingleStream, self).__init__(parent)
     def chngStream(self, str):
@@ -158,6 +183,10 @@ class AppCore(QObject):
         # start thread
         self.thread.start()
 
+        self.streamRecord = SavingStream('rtsp://172.18.191.54:554/Streaming/Channels/1')
+        self.streamRecord.start()
+
+
 
 
 
@@ -229,18 +258,6 @@ class AppCore(QObject):
             pass
         else:
             self.singleStream.chngStream(rtsp)
-            # if (self.streaming):
-            #     try:
-            #         self.vcap = cv2.VideoCapture(rtsp)
-            #     except:
-            #         logging.ERROR('Поток с камеры не берется')
-            # else:
-            #     try:
-            #         self.vcap = cv2.VideoCapture(rtsp)
-            #         self.viewStream(rtsp)
-            #     except:
-            #         logging.ERROR('Поток с камеры не берется')
-
 
     def viewStream(self, camera) -> None:
 
@@ -281,7 +298,9 @@ class AppCore(QObject):
 
     @Slot()
     def StartRecording(self):
-        pass
+        logger.info('trigger of slot StartRecording')
+        self.streamRecord.stopRecording()
+
         # thread = QThread()
         # singleStream = SingleStream()
         # singleStream.moveToThread(thread)

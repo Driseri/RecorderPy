@@ -37,7 +37,7 @@ class SavingStream(QThread):
             logger.error('Problem in read rtsp (SavingStream)')
         self.frame_width = int(self.vcap.get(3))
         self.frame_height = int(self.vcap.get(4))
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.fourcc = cv2.VideoWriter_fourcc(*'H264')
         self.frame_size = (self.frame_width, self.frame_height)
         self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
         self.out = cv2.VideoWriter(name, self.fourcc, self.fps, self.frame_size)

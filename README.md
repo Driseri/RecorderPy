@@ -5,3 +5,5 @@
 
 
 запустить main.py
+
+Если не стоят необходимые dll для кодека: https://github.com/cisco/openh264/releases

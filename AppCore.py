@@ -27,7 +27,7 @@ ROOMS_FILE = config["main"]["cameras"]
 
 
 class SavingStream(QThread):
-    def __init__(self, rtsp, parent =None):
+    def __init__(self, rtsp, name, parent =None):
         super(SavingStream, self).__init__(parent)
         self.rtsp = rtsp
         self.isRecord = True
@@ -40,8 +40,12 @@ class SavingStream(QThread):
         self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
         self.frame_size = (self.frame_width, self.frame_height)
         self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
-        self.out = cv2.VideoWriter('output1.avi', self.fourcc, self.fps, self.frame_size)
+        self.out = cv2.VideoWriter(name, self.fourcc, self.fps, self.frame_size)
 
+    def videoNaming(self, name) -> str:
+        time = datetime.now()
+        #todo Настроить наименование видео
+        return("{}-{}-{}-{}:{}-{}.avi".format(time.year, time.month,time.day,time.hour,time.minute,name))
 
     def stopRecording(self):
         self.isRecord = False
@@ -165,6 +169,7 @@ class AppCore(QObject):
         self.info = {}
         self.connector = connect
         self.select_rtsp = []
+        self.record_threads = []
         self.streaming = False
         self.isrecord = False
         self.vcap = 0
@@ -183,8 +188,6 @@ class AppCore(QObject):
         # start thread
         self.thread.start()
 
-        self.streamRecord = SavingStream('rtsp://172.18.191.54:554/Streaming/Channels/1')
-        self.streamRecord.start()
 
 
 
@@ -240,7 +243,6 @@ class AppCore(QObject):
 
     @Slot(str,str)
     def addSelect(self, rtsp, name) -> None:
-        #todo Должно принимать еще всякие названия
         if rtsp in self.select_rtsp:
             self.select_rtsp.remove([rtsp,name])
         else:
@@ -249,7 +251,10 @@ class AppCore(QObject):
 
 
     #todo Добавить кноку обнуления выбора
-
+    @Slot()
+    def clearSelected(self) -> None:
+        self.select_rtsp.clear()
+        print(self.select_rtsp)
 
     @Slot(str,str)
     def buttonReact(self, rtsp, name):
@@ -259,99 +264,28 @@ class AppCore(QObject):
         else:
             self.singleStream.chngStream(rtsp)
 
-    def viewStream(self, camera) -> None:
-
-        self.streaming = True
-
-        while (self.vcap.isOpened() and self.streaming):
-            ret, frame = self.vcap.read()
-            # print(type(frame))
-            try:
-                cv2.imshow('main', frame)
-            except:
-                logging.ERROR('Вывод кадра накрылся')
-            if cv2.waitKey(20) & 0xFF == ord('q'):
-                break
-
-        self.vcap.release()
-
-
-    @Slot()
-    def recStop(self):
-        #print("QWEQWEQWE")
-        self.streaming = False
-
     def getFreeSpace(self) -> str:
         free = psutil.disk_usage(DISK).free/(1024*1024*1024)
         return (f"{free:.4} Gb free on disk {DISK}")
 
 
-    def videoNaming(self, name) -> str:
-        time = datetime.now()
-        return("{}-{}-{}-{}:{}-{}".format(time.year, time.month,time.day,time.hour,time.minute,name))
-    #todo Создание имен
-
     @Slot(ndarray)
     def addNewTextAndColor(self, string):
         cv2.imshow('main', string)
 
+    @Slot()
+    def recStop(self):
+        logger.info('ending of recordings')
+        for threads in self.record_threads:
+            threads.stopRecording()
 
     @Slot()
     def StartRecording(self):
         logger.info('trigger of slot StartRecording')
-        self.streamRecord.stopRecording()
-
-        # thread = QThread()
-        # singleStream = SingleStream()
-        # singleStream.moveToThread(thread)
-        # self.nextCameraView.connect(singleStream.chooseCamera)
-        # thread.started.connect(singleStream.run)
-        # thread.start()
-        # self.nextCameraView.emit(self.select_rtsp[0][0])
-        # for camp in self.select_rtsp:
-        #     #todo ПОТОКИ СДЕЛАТЬ СРОЧНО!!!!
-        #     pass
-        #     #recording = Thread(target=self.videoNaming, args=(camp))
-            #recording.start()
-            #th = Thread(target=self.recordStream, args=())
-
-
-
-
-    def recordStream(self,args) -> None:
-        #todo Дописать запись (Добавить многопоточность)
-        #todo Масштаб вывода настроить
-
-
-        name = self.videoNaming(args[1])
-        name = name + '.avi'
-        print(args[0])
-        vcap = cv2.VideoCapture(args[0])
-        frame_width = int(vcap.get(3))
-        frame_height = int(vcap.get(4))
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        frame_size = (frame_width, frame_height)
-        fps = vcap.get(cv2.CAP_PROP_FPS)
-        out = cv2.VideoWriter('name.avi', fourcc, fps, frame_size)
-        time1 = time.perf_counter()
-        time2 = time.perf_counter()
-        while (vcap.isOpened() and time2 - time1 < 10):
-            time2 = time.perf_counter()
-            ret, frame = vcap.read()
-            out.write(frame)
-
-        print(name+'IS OVER')
-        vcap.release()
-        out.release()
-        # while (vcap.isOpened() and self.isrecord):
-        #     ret, frame = vcap.read()
-        #     #res = cv2.resize(frame, dsize=(500,500), interpolation=cv2.INTER_CUBIC)
-        #     cv2.imshow('main', frame)
-        #     if cv2.waitKey(20) & 0xFF == ord('q'):
-        #         break
-        #
-
-
-
-
-
+        string = 'naming'
+        integer = 1
+        for rtsp in self.select_rtsp:
+            threadRecord = SavingStream(rtsp[0],(string+str(integer)+'.avi'))
+            threadRecord.start()
+            self.record_threads.append(threadRecord)
+            integer = integer + 1

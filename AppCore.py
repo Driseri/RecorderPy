@@ -42,11 +42,6 @@ class SavingStream(QThread):
         self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
         self.out = cv2.VideoWriter(name, self.fourcc, self.fps, self.frame_size)
 
-    def videoNaming(self, name) -> str:
-        time = datetime.now()
-        #todo Настроить наименование видео
-        return("{}-{}-{}-{}:{}-{}.avi".format(time.year, time.month,time.day,time.hour,time.minute,name))
-
     def stopRecording(self):
         self.isRecord = False
 
@@ -279,13 +274,19 @@ class AppCore(QObject):
         for threads in self.record_threads:
             threads.stopRecording()
 
+    def videoNaming(self, name) -> str:
+        return((('_'.join(name.split())).replace(':','_')+'_'+('_'.join(str(datetime.now()).split())).replace(':','_')).replace('.','_')+'.avi')
+
+
     @Slot()
     def StartRecording(self):
         logger.info('trigger of slot StartRecording')
         string = 'naming'
         integer = 1
         for rtsp in self.select_rtsp:
-            threadRecord = SavingStream(rtsp[0],(string+str(integer)+'.avi'))
+            naming = self.videoNaming(rtsp[1])
+            print(naming)
+            threadRecord = SavingStream(rtsp[0], naming)
             threadRecord.start()
             self.record_threads.append(threadRecord)
             integer = integer + 1

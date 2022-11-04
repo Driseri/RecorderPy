@@ -275,7 +275,9 @@ class AppCore(QObject):
             threads.stopRecording()
 
     def videoNaming(self, name) -> str:
-        return((('_'.join(name.split())).replace(':','_')+'_'+('_'.join(str(datetime.now()).split())).replace(':','_')).replace('.','_')+'.avi')
+        return((('_'.join(name.split())).replace(':','_')+
+                '_'+
+                ('_'.join(str(datetime.now()).split())).replace(':','_')).replace('.','_')+'.mp4')
 
 
     @Slot()

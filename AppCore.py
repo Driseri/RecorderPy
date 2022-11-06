@@ -254,8 +254,7 @@ class AppCore(QObject):
     @Slot(str,str)
     def buttonReact(self, rtsp, name):
         if (self.isrecord):
-            #todo Добавить запись потоков
-            pass
+            self.addSelect(rtsp, name)
         else:
             self.singleStream.chngStream(rtsp)
 

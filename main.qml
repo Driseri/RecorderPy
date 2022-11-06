@@ -25,7 +25,7 @@ Window {
         footer: Rectangle {
             width: win.width
             height: win.height * 0.05
-            color:  "green"
+            color:  "grey"
             Text {
                 anchors.centerIn: parent
                 text: freeSpace
@@ -39,7 +39,7 @@ Window {
             anchors.bottom: parent.bottom
             width: parent.width * 0.2
             height: parent.height
-            color: "blue"
+            color: "grey"
 
             ListView {
                 id: listview
@@ -79,7 +79,7 @@ Window {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            color: "red"
+            color: "grey"
 
             Component {
                     id: contactDelegate
@@ -97,7 +97,7 @@ Window {
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
-                                    appCore.addSelect(model.rtsp, model.name)
+                                    //appCore.addSelect(model.rtsp, model.name)
                                     appCore.buttonReact(model.rtsp, model.name)
                                     //appCore.recStart()
                                     //parent.color = "yellow"
@@ -195,7 +195,32 @@ Window {
                             }
                     }
 
+            Rectangle {
+                        id: select
+                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        radius: 5
+                        color: "grey"
+                        border.width: 2
+                        border.color: "black"
+                        anchors.right: clearChoi.left
+                        anchors.bottom: parent.bottom
 
+                        Column {
+                            anchors.fill: parent
+                            Text { text: "Выбор камер"; anchors.horizontalCenter: parent.horizontalCenter }
+                        }
+                        MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    appCore.setRecord()
+                                    //appCore.clearSelected()
+                                    //appCore.addSelect(model.rtsp)
+                                    //appCore.buttonReact(model.rtsp, model.name)
+                                    //appCore.recStart()
+                                    //parent.color = "yellow"
+                                }
+                            }
+                    }
         }
 }
 

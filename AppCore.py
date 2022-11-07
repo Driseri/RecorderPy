@@ -63,7 +63,7 @@ class SingleStream(QObject):
     newTextAndColor = Signal(ndarray)
     rtsp = ""
 
-    vcap = cv2.VideoCapture(0)
+    vcap = cv2.VideoCapture('rtsp://172.18.191.54:554/Streaming/Channels/1')
     def __init__(self, parent=None):
         super(SingleStream, self).__init__(parent)
     def chngStream(self, str):

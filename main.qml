@@ -23,14 +23,20 @@ Window {
         id: page
         anchors.fill: parent
         footer: Rectangle {
+            id: footer
             width: win.width
             height: win.height * 0.05
-            color:  "grey"
+            color: "#bea18d"
+            border.color: "black"
+            border.width: 2
             Text {
                 anchors.centerIn: parent
                 text: freeSpace
+                color: "#01004e"
+                font.bold: true
             }
         }
+
 
         Rectangle {
             id: scrol
@@ -39,41 +45,20 @@ Window {
             anchors.bottom: parent.bottom
             width: parent.width * 0.2
             height: parent.height
-            color: "grey"
+            color: "#01004e"
 
             ListView {
                 id: listview
                 anchors.fill: parent
+                anchors.margins: 15
+                spacing: 15
                 model: listModel
-                spacing: 10
-                delegate:
-                    Rectangle {
-                    radius: 5
-                    height: 60
-                    width: ListView.view.width
-                    color: "grey"
-                    border.color: " black"
-                    Text {
-                        id: buttonText
-                        anchors.centerIn: parent
-                        text: display
-                    }
-                    MouseArea {
-                            anchors.fill: parent
-                            onClicked: {
-                                videoModel.deleteCameras()
-                                appCore.getCams(buttonText.text)
-                                videoModel.addCamera()
-                            }
-                        }
-
-                }
+                delegate: ButtonDelegate{}
             }
         }
 
-
-
         Rectangle {
+            id: screen
             height: parent.height
             width: parent.width - scrol.width
             anchors.right: parent.right
@@ -108,116 +93,102 @@ Window {
 
             GridView {
                 id: grid
-                cellWidth: parent.width/4
-                cellHeight: parent.height/4
+                cellWidth: parent.width / 3 - 10
+                cellHeight: parent.height / 3 - 10
                 width: parent.width
                 height: parent.height
                 anchors.fill: parent
+                anchors.right:screen.right
+                anchors.left:screen.left
+                anchors.margins: 15
                 model: videoModel
-                delegate: contactDelegate
+                delegate: ScreenDelegate {}
                 highlight: Rectangle { color: "lightsteelblue"; radius: 5; Text{} }
-
             }
 
             Rectangle {
                         id: choi
-                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        width: grid.cellWidth * 0.75; height: grid.cellHeight * 0.3
                         radius: 5
-                        color: "grey"
+                        color: "whitesmoke"
                         border.width: 2
                         border.color: "black"
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
-
-                        Column {
-                            anchors.fill: parent
-                            Text { text: "Конец"; anchors.horizontalCenter: parent.horizontalCenter }
-                        }
+                        anchors.margins: 10
+                        Text { id: choitext; text: "exit"; anchors.centerIn: parent;
+                            font.pointSize: grid.cellWidth / 20; font.bold: true}
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
                                     appCore.recStop()
-                                    //appCore.addSelect(model.rtsp)
-                                    //appCore.buttonReact(model.rtsp, model.name)
-                                    //appCore.recStart()
-                                    //parent.color = "yellow"
+                                    parent.color = "#01004e"
+                                    selecttext.color = "white"
                                 }
                             }
                     }
             Rectangle {
                         id: startRec
-                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        width: grid.cellWidth * 0.75; height: grid.cellHeight * 0.3
                         radius: 5
-                        color: "grey"
+                        color: "white"
                         border.width: 2
                         border.color: "black"
                         anchors.right: choi.left
                         anchors.bottom: parent.bottom
-
-                        Column {
-                            anchors.fill: parent
-                            Text { text: "Начало записи потоков"; anchors.horizontalCenter: parent.horizontalCenter }
-                        }
+                        anchors.margins: 10
+                        Text { id: startRectext; text: "start recording"; anchors.centerIn: parent;
+                            font.pointSize: grid.cellWidth / 20; font.bold: true}
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
                                     appCore.StartRecording()
-                                    //appCore.addSelect(model.rtsp)
-                                    //appCore.buttonReact(model.rtsp, model.name)
-                                    //appCore.recStart()
-                                    //parent.color = "yellow"
+                                    parent.color = "#01004e"
+                                    selecttext.color = "white"
                                 }
                             }
                     }
             Rectangle {
                         id: clearChoi
-                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        width: grid.cellWidth * 0.75; height: grid.cellHeight * 0.3
                         radius: 5
-                        color: "grey"
+                        color: "white"
                         border.width: 2
                         border.color: "black"
                         anchors.right: startRec.left
                         anchors.bottom: parent.bottom
-
-                        Column {
-                            anchors.fill: parent
-                            Text { text: "Очистить выбор камер"; anchors.horizontalCenter: parent.horizontalCenter }
-                        }
+                        anchors.margins: 10
+                        Text { id: clearChoitext; text: "clear camera selection"; anchors.centerIn: parent;
+                            font.pointSize: grid.cellWidth / 20; font.bold: true}
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
                                     appCore.clearSelected()
-                                    //appCore.addSelect(model.rtsp)
-                                    //appCore.buttonReact(model.rtsp, model.name)
-                                    //appCore.recStart()
-                                    //parent.color = "yellow"
+                                    parent.color = "#01004e"
+                                    selecttext.color = "white"
                                 }
                             }
                     }
 
             Rectangle {
                         id: select
-                        width: grid.cellWidth*0.8; height: grid.cellHeight*0.8
+                        width: grid.cellWidth * 0.75; height: grid.cellHeight * 0.3
                         radius: 5
-                        color: "grey"
+                        color: "white"
                         border.width: 2
                         border.color: "black"
                         anchors.right: clearChoi.left
                         anchors.bottom: parent.bottom
-
-                        Column {
-                            anchors.fill: parent
-                            Text { text: "Выбор камер"; anchors.horizontalCenter: parent.horizontalCenter }
-                        }
+                        anchors.left: screen.left;
+                        anchors.margins: 10
+                        Text {id: selecttext; text: "camera selection"; anchors.centerIn: parent;
+                            font.pointSize: grid.cellWidth / 20; font.bold: true}
                         MouseArea {
                                 anchors.fill: parent
                                 onClicked: {
                                     appCore.setRecord()
-                                    //appCore.clearSelected()
-                                    //appCore.addSelect(model.rtsp)
-                                    //appCore.buttonReact(model.rtsp, model.name)
-                                    //appCore.recStart()
-                                    //parent.color = "yellow"
+                                    parent.color = "#01004e"
+                                    selecttext.color = "white"
                                 }
                             }
                     }

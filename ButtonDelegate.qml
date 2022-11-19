@@ -6,26 +6,32 @@ import QtQuick.Layouts 1.12
 Component {
     id: buttondelegate
     Rectangle {
+        readonly property ListView __listview: ListView.view
+        id:rect
         radius: 10
         height: 60
         width: ListView.view.width
-        color: "whitesmoke"
-        border.color: " black"
+        color: __listview.currentIndex == index ? "#bea18d" : "#ffecde"
         Text {
             id: buttonText
-            anchors.centerIn: parent
-            text: display /*model.name*/
-            font.pointSize: grid.cellWidth / 17
+            width: parent.width
+            height: parent.height
+            text: display
+            font.pointSize: grid.cellWidth / 13
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
             font.bold: true
+            color: __listview.currentIndex == index ? "white" : "#01004e"
+            wrapMode: Text.Wrap
         }
         MouseArea {
+            id: buttmouse
                 anchors.fill: parent
                 onClicked: {
                     videoModel.deleteCameras()
                     appCore.getCams(buttonText.text)
                     videoModel.addCamera()
-                    parent.color = "#bea18d"
-                    buttonText.color = "white"
+                    __listview.currentIndex = index
                 }
             }
     }

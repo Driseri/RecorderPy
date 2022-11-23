@@ -70,97 +70,10 @@ Window {
                 delegate: ScreenDelegate {}
             }
 
-            Rectangle {
-                        id: choi
-                        width: grid.cellWidth; height: grid.cellHeight * 0.3
-                        radius: 5
-                        color: "#01004e"
-                        border.width: 2
-                        border.color: "#01004e"
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 10
-                        Text { id: choitext; text: "exit"; anchors.centerIn: parent;
-                            font.pointSize: grid.cellWidth / 15; font.bold: true; color: "white"}
-                        MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    appCore.recStop()
-                                    parent.color = "#bea18d"
-                                    choitext.color = "white"
-                                    clearChoi.color = startRec.color = select.color = "#01004e"
-                                }
-                            }
-                    }
-            Rectangle {
-                        id: startRec
-                        width: grid.cellWidth; height: grid.cellHeight * 0.3
-                        radius: 5
-                        color: "#01004e"
-                        border.width: 2
-                        border.color: "#01004e"
-                        anchors.right: choi.left
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 10
-                        Text { id: startRectext; text: "start recording"; anchors.centerIn: parent;
-                            font.pointSize: grid.cellWidth / 15; font.bold: true; color: "white"}
-                        MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    appCore.StartRecording()
-                                    parent.color = "#bea18d"
-                                    startRectext.color = "white"
-                                    clearChoi.color = choi.color = select.color = "#01004e"
-                                }
-                            }
-                    }
-            Rectangle {
-                        id: clearChoi
-                        width: grid.cellWidth; height: grid.cellHeight * 0.3
-                        radius: 5
-                        color: "#01004e"
-                        border.width: 2
-                        border.color: "#01004e"
-                        anchors.right: startRec.left
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 10
-                        Text { id: clearChoitext; text: "clear camera selection"; anchors.centerIn: parent;
-                            font.pointSize: grid.cellWidth / 15; font.bold: true; color: "white"}
-                        MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    appCore.clearSelected()
-                                    parent.color = "#bea18d"
-                                    clearChoitext.color = "white"
-                                    choi.color = startRec.color = select.color = "#01004e"
-                                }
-                            }
-                    }
-
-            Rectangle {
-                        id: select
-                        width: grid.cellWidth; height: grid.cellHeight * 0.3
-                        radius: 5
-                        color: "#01004e"
-                        border.width: 2
-                        border.color: "#01004e"
-                        anchors.right: clearChoi.left
-                        anchors.bottom: parent.bottom
-                        anchors.left: screen.left;
-                        anchors.margins: 10
-                        Text {id: selecttext; text: "camera selection"; anchors.centerIn: parent;
-                            font.pointSize: grid.cellWidth / 15; font.bold: true; color: "white"}
-                        MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    appCore.setRecord()
-                                    parent.color = "#bea18d"
-                                    selecttext.color = "white"
-                                    clearChoi.color = startRec.color = choi.color = "#01004e"
-                                }
-                            }
-                    }
+            StopRecordingButton {id: choi}
+            StartRecordingButton {id: startRec}
+            ClearChoiceButton {id: clearChoi}
+            SelectCamerasButton {id: select}
         }
-}
-
+    }
 }

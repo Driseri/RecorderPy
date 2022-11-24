@@ -169,7 +169,8 @@ class AppCore(QObject):
         self.isrecord = False
         self.vcap = 0
         cv2.namedWindow("main", cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('main', 900, 900)
+        #cv2.resizeWindow('main', 900, 900)
+        cv2.setWindowProperty("main", 0, 1)
         cv2.moveWindow('main', 500, 0)
         self.thread = QThread()
         # create object which will be moved to another thread

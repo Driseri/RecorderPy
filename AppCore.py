@@ -11,6 +11,7 @@ from numpy import *
 from datetime import datetime
 import time
 import logging
+import subprocess
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -31,28 +32,34 @@ class SavingStream(QThread):
         super(SavingStream, self).__init__(parent)
         self.rtsp = rtsp
         self.isRecord = True
-        try:
-            self.vcap = cv2.VideoCapture(self.rtsp)
-        except:
-            logger.error('Problem in read rtsp (SavingStream)')
-        self.frame_width = int(self.vcap.get(3))
-        self.frame_height = int(self.vcap.get(4))
-        self.fourcc = cv2.VideoWriter_fourcc(*'H264')
-        self.frame_size = (self.frame_width, self.frame_height)
-        self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
-        self.out = cv2.VideoWriter(name, self.fourcc, self.fps, self.frame_size)
+        self.name = name
+        # try:
+        #     self.vcap = cv2.VideoCapture(self.rtsp)
+        # except:
+        #     logger.error('Problem in read rtsp (SavingStream)')
+        # self.frame_width = int(self.vcap.get(3))
+        # self.frame_height = int(self.vcap.get(4))
+        # self.fourcc = cv2.VideoWriter_fourcc(*'H264')
+        # self.frame_size = (self.frame_width, self.frame_height)
+        # self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
+        # self.out = cv2.VideoWriter(name, self.fourcc, self.fps, self.frame_size)
 
     def stopRecording(self):
         self.isRecord = False
 
     def run(self):
-        while self.isRecord:
-            ret, frame = self.vcap.read()
-            self.out.write(frame)
-
-        self.vcap.release()
-        self.out.release()
-
+        # while self.isRecord:
+        #     ret, frame = self.vcap.read()
+        #     self.out.write(frame)
+        #
+        # self.vcap.release()
+        # self.out.release()
+        process = subprocess.Popen(
+            ['ffmpeg', '-i', self.rtsp, self.name],
+            stdin=subprocess.PIPE)
+        while True:
+            if self.isRecord == False:
+                process.communicate(b'q')
         logger.info('end of recording')
 
 

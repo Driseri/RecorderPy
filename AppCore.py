@@ -205,7 +205,8 @@ class AppCore(QObject):
             list.append({"name": camera['name'],
                          "type": camera['type'],
                          "rtsp": camera['rtsp_main']})
-        self.current_audio = self.info[str]['audio'][0]
+        if len(self.info[str]['audio']) != 0:
+            self.current_audio = self.info[str]['audio'][0]
         #Изменить отправку на изменение
         self.connector.changeList(list)
 

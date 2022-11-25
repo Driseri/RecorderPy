@@ -18,7 +18,7 @@ Rectangle {
         anchors.centerIn: parent
         width: parent.height / 1.2
         height: parent.height / 1.2
-        source: "./img/stop.png"
+        source: "img/stop.png"
     }
     MouseArea {
         anchors.fill: parent

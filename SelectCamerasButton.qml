@@ -20,7 +20,7 @@ Rectangle {
         anchors.centerIn: parent
         width: parent.height / 1.2
         height: parent.height / 1.2
-        source: "./img/addnew.png"
+        source: "img/addnew.png"
     }
     MouseArea {
         anchors.fill: parent

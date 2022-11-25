@@ -56,7 +56,7 @@ class SavingStream(QThread):
         # self.vcap.release()
         # self.out.release()
         process = subprocess.Popen(
-            ['ffmpeg', '-i', self.rtsp,'-i', self.audio, '-c:v', 'copy', '-c:a', 'aac', self.name],
+            ['ffmpeg', '-i', self.rtsp,'-i', self.audio, self.name],
             stdin=subprocess.PIPE)
         while True:
             if self.isRecord == False:

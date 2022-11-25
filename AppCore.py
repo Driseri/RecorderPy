@@ -28,11 +28,12 @@ ROOMS_FILE = config["main"]["cameras"]
 
 
 class SavingStream(QThread):
-    def __init__(self, rtsp, name, parent =None):
+    def __init__(self, rtsp, name, audio, parent =None):
         super(SavingStream, self).__init__(parent)
         self.rtsp = rtsp
         self.isRecord = True
         self.name = name
+        self.audio = audio
         # try:
         #     self.vcap = cv2.VideoCapture(self.rtsp)
         # except:
@@ -55,7 +56,7 @@ class SavingStream(QThread):
         # self.vcap.release()
         # self.out.release()
         process = subprocess.Popen(
-            ['ffmpeg', '-i', self.rtsp, self.name],
+            ['ffmpeg', '-i', self.rtsp,'-i', self.audio, '-c:v', 'copy', '-c:a', 'aac', self.name],
             stdin=subprocess.PIPE)
         while True:
             if self.isRecord == False:
@@ -175,10 +176,11 @@ class AppCore(QObject):
         self.streaming = False
         self.isrecord = False
         self.vcap = 0
+        self.current_audio = []
         cv2.namedWindow("main", cv2.WINDOW_NORMAL)
         #cv2.resizeWindow('main', 900, 900)
         cv2.setWindowProperty("main", 0, 1)
-        cv2.moveWindow('main', 500, 0)
+        cv2.moveWindow('main', 800, 0)
         self.thread = QThread()
         # create object which will be moved to another thread
         self.singleStream = SingleStream()
@@ -203,7 +205,7 @@ class AppCore(QObject):
             list.append({"name": camera['name'],
                          "type": camera['type'],
                          "rtsp": camera['rtsp_main']})
-
+        self.current_audio = self.info[str]['audio'][0]
         #Изменить отправку на изменение
         self.connector.changeList(list)
 
@@ -294,8 +296,9 @@ class AppCore(QObject):
         integer = 1
         for rtsp in self.select_rtsp:
             naming = self.videoNaming(rtsp[1])
+            audio_rtsp = self.current_audio['rtsp_main']
             print(naming)
-            threadRecord = SavingStream(rtsp[0], naming)
+            threadRecord = SavingStream(rtsp[0], naming, audio_rtsp)
             threadRecord.start()
             self.record_threads.append(threadRecord)
             integer = integer + 1

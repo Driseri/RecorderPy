@@ -18,15 +18,13 @@ Rectangle {
         anchors.centerIn: parent
         width: parent.height / 1.2
         height: parent.height / 1.2
-        source: "img/record.png"
+        source: "./img/record.png"
     }
     MouseArea {
         anchors.fill: parent
         onClicked: {
             appCore.StartRecording()
             parent.color = "#bea18d"
-            startRectext.color = "white"
-            clearChoi.color = choi.color = select.color = "#01004e"
         }
     }
 }

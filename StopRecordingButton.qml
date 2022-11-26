@@ -7,7 +7,7 @@ Rectangle {
     id: choi
     width: grid.cellWidth; height: grid.cellHeight * 0.3
     radius: 5
-    color: "#01004e"
+    color: choiClick.containsPress ? "#bea18d" : "#01004e"
     border.width: 2
     border.color: "#01004e"
     anchors.right: parent.right
@@ -18,15 +18,14 @@ Rectangle {
         anchors.centerIn: parent
         width: parent.height / 1.2
         height: parent.height / 1.2
-        source: "img/stop.png"
+        source: "./img/stop.png"
     }
     MouseArea {
+        id: choiClick
         anchors.fill: parent
         onClicked: {
             appCore.recStop()
-            parent.color = "#bea18d"
-            choitext.color = "white"
-            clearChoi.color = startRec.color = select.color = "#01004e"
+            startRec.color = "#01004e"
         }
     }
 }

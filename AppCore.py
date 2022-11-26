@@ -22,18 +22,19 @@ handler = logging.StreamHandler(stream=sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='[%(asctime)s: %(levelname)s] %(message)s'))
 logger.addHandler(handler)
 
-
 DISK = config["main"]["disk"]
 ROOMS_FILE = config["main"]["cameras"]
 
 
 class SavingStream(QThread):
-    def __init__(self, rtsp, name, audio, parent =None):
+    def __init__(self, rtsp, name, audio, parent=None):
         super(SavingStream, self).__init__(parent)
         self.rtsp = rtsp
         self.isRecord = True
+        self.isMerge = True
         self.name = name
         self.audio = audio
+        #self.audio_file = audio_file
         # try:
         #     self.vcap = cv2.VideoCapture(self.rtsp)
         # except:
@@ -55,14 +56,28 @@ class SavingStream(QThread):
         #
         # self.vcap.release()
         # self.out.release()
-        process = subprocess.Popen(
-            ['ffmpeg', '-i', self.rtsp,'-i', self.audio, self.name],
+        process_video = subprocess.Popen(
+            ['ffmpeg', '-i', self.rtsp, self.name],
+            stdin=subprocess.PIPE)
+        process_audio = subprocess.Popen(
+            ['ffmpeg', '-i', self.audio, self.name[:len(self.name) - 3] + 'mp3'],
             stdin=subprocess.PIPE)
         while True:
             if self.isRecord == False:
-                process.communicate(b'q')
+                process_video.communicate(b'q')
+                process_audio.communicate(b'q')
+        # ffmpeg -i video.mp4 -i audio.wav -c copy output.mkv
+        process_merge = subprocess.Popen(
+            ['ffmpeg', '-i', self.rtsp,'-i', self.name[:len(self.name) - 3] + 'mp3','-c','copy', 'finish' + self.name],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        while self.isMerge:
+            if "" == pipe.stdout.readline():
+                print("Success")
+                self.isMerge = False
+            if not "" == pipe.stderr.readline():
+                print("Error")
+                self.isMerge = False
         logger.info('end of recording')
-
 
 
 class SingleStream(QObject):
@@ -72,8 +87,10 @@ class SingleStream(QObject):
     rtsp = ""
 
     vcap = cv2.VideoCapture('rtsp://172.18.191.54:554/Streaming/Channels/1')
+
     def __init__(self, parent=None):
         super(SingleStream, self).__init__(parent)
+
     def chngStream(self, str):
         self.rtsp = str
         self.vcap = cv2.VideoCapture(self.rtsp)
@@ -91,11 +108,6 @@ class SingleStream(QObject):
         self.vcap.release()
 
 
-
-
-
-
-
 class Connector():
     def __init__(self):
         self.newListCam = []
@@ -108,16 +120,13 @@ class Connector():
 
 
 class VideoModel(QAbstractListModel):
-
     NameRole = Qt.UserRole + 1
     TypeRole = Qt.UserRole + 2
     RtspRole = Qt.UserRole + 3
 
     modelChanged = Signal()
 
-
-
-    def __init__(self,connect, parent=None):
+    def __init__(self, connect, parent=None):
         super().__init__(parent)
         self.connector = connect
         self._entries = []
@@ -143,14 +152,13 @@ class VideoModel(QAbstractListModel):
         roles[VideoModel.RtspRole] = b"rtsp"
         return roles
 
-
     def getConnector(self):
         print(self.connector.getList())
 
     @Slot()
     def addCamera(self):
         cams = self.connector.getList()
-        self.beginInsertRows(QModelIndex(), 0, len(cams)-1)
+        self.beginInsertRows(QModelIndex(), 0, len(cams) - 1)
         self._entries = cams
         self.endInsertRows()
 
@@ -158,14 +166,12 @@ class VideoModel(QAbstractListModel):
     def deleteCameras(self):
         if self.rowCount():
             self.beginRemoveColumns(QModelIndex(), 0, self.rowCount())
-            del self._entries[self.rowCount()-1]
+            del self._entries[self.rowCount() - 1]
             self.endRemoveRows()
 
 
-
-
 class AppCore(QObject):
-    def __init__(self,connect, parent=None):
+    def __init__(self, connect, parent=None):
         super(AppCore, self).__init__(parent)
         # self.thread = QThread()
         self.data = {}
@@ -178,7 +184,7 @@ class AppCore(QObject):
         self.vcap = 0
         self.current_audio = []
         cv2.namedWindow("main", cv2.WINDOW_NORMAL)
-        #cv2.resizeWindow('main', 900, 900)
+        # cv2.resizeWindow('main', 900, 900)
         cv2.setWindowProperty("main", 0, 1)
         cv2.moveWindow('main', 800, 0)
         self.thread = QThread()
@@ -193,24 +199,20 @@ class AppCore(QObject):
         # start thread
         self.thread.start()
 
-
-
-
-
-
     @Slot(str)
-    def getCams(self,str):
+    def getCams(self, str):
         list = []
         for camera in self.info[str]['cameras']:
             list.append({"name": camera['name'],
                          "type": camera['type'],
                          "rtsp": camera['rtsp_main']})
+        print(self.info[str])
         if len(self.info[str]['audio']) != 0:
-            self.current_audio = self.info[str]['audio'][0]
-        #Изменить отправку на изменение
+            self.current_audio.append(self.info[str]['audio'][0])
+            self.current_audio.append(str + '.mp3')
+
+        # Изменить отправку на изменение
         self.connector.changeList(list)
-
-
 
     def getCameras(self) -> dict:
         with open(ROOMS_FILE, 'r') as file:
@@ -246,23 +248,21 @@ class AppCore(QObject):
         else:
             self.isrecord = True
 
-
-    @Slot(str,str)
+    @Slot(str, str)
     def addSelect(self, rtsp, name) -> None:
         if rtsp in self.select_rtsp:
-            self.select_rtsp.remove([rtsp,name])
+            self.select_rtsp.remove([rtsp, name])
         else:
-            self.select_rtsp.append([rtsp,name])
+            self.select_rtsp.append([rtsp, name])
         print(self.select_rtsp)
 
-
-    #todo Добавить кноку обнуления выбора
+    # todo Добавить кноку обнуления выбора
     @Slot()
     def clearSelected(self) -> None:
         self.select_rtsp.clear()
         print(self.select_rtsp)
 
-    @Slot(str,str)
+    @Slot(str, str)
     def buttonReact(self, rtsp, name):
         if (self.isrecord):
             self.addSelect(rtsp, name)
@@ -270,9 +270,8 @@ class AppCore(QObject):
             self.singleStream.chngStream(rtsp)
 
     def getFreeSpace(self) -> str:
-        free = psutil.disk_usage(DISK).free/(1024*1024*1024)
+        free = psutil.disk_usage(DISK).free / (1024 * 1024 * 1024)
         return (f"{free:.4} Gb free on disk {DISK}")
-
 
     @Slot(ndarray)
     def addNewTextAndColor(self, string):
@@ -285,10 +284,9 @@ class AppCore(QObject):
             threads.stopRecording()
 
     def videoNaming(self, name) -> str:
-        return((('_'.join(name.split())).replace(':','_')+
-                '_'+
-                ('_'.join(str(datetime.now()).split())).replace(':','_')).replace('.','_')+'.mp4')
-
+        return ((('_'.join(name.split())).replace(':', '_') +
+                 '_' +
+                 ('_'.join(str(datetime.now()).split())).replace(':', '_')).replace('.', '_') + '.mp4')
 
     @Slot()
     def StartRecording(self):
@@ -297,7 +295,8 @@ class AppCore(QObject):
         integer = 1
         for rtsp in self.select_rtsp:
             naming = self.videoNaming(rtsp[1])
-            audio_rtsp = self.current_audio['rtsp_main']
+            audio_rtsp = self.current_audio[0]['rtsp_main']
+            audio_file = self.current_audio[1]
             print(naming)
             threadRecord = SavingStream(rtsp[0], naming, audio_rtsp)
             threadRecord.start()

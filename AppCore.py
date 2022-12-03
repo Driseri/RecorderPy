@@ -14,6 +14,7 @@ import logging
 import subprocess
 import ffmpeg
 
+
 config = configparser.ConfigParser()
 config.read("config.ini")
 
@@ -35,28 +36,12 @@ class SavingStream(QThread):
         self.name = name
         self.audio = audio
         self.args = args
-        #self.audio_file = audio_file
-        # try:
-        #     self.vcap = cv2.VideoCapture(self.rtsp)
-        # except:
-        #     logger.error('Problem in read rtsp (SavingStream)')
-        # self.frame_width = int(self.vcap.get(3))
-        # self.frame_height = int(self.vcap.get(4))
-        # self.fourcc = cv2.VideoWriter_fourcc(*'H264')
-        # self.frame_size = (self.frame_width, self.frame_height)
-        # self.fps = self.vcap.get(cv2.CAP_PROP_FPS)
-        # self.out = cv2.VideoWriter(name, self.fourcc, self.fps, self.frame_size)
+        self.path = os.path.abspath(os.curdir)
 
     def stopRecording(self):
         self.isRecord = False
 
     def run(self):
-        # while self.isRecord:
-        #     ret, frame = self.vcap.read()
-        #     self.out.write(frame)
-        #
-        # self.vcap.release()
-        # self.out.release()
         process_video = subprocess.Popen(
             ['ffmpeg', '-i', self.rtsp, self.name],
             stdin=subprocess.PIPE)
@@ -73,25 +58,22 @@ class SavingStream(QThread):
         for i in range(3):
             print(i)
             time.sleep(1)
-        # os.remove(self.name)
         code = subprocess.call(['ffmpeg', '-i', self.name, '-i', self.name[:len(self.name) - 3] + 'mp3',
                              '-c',  'copy',  'final_'+self.name])
         time.sleep(1)
         os.remove(self.name)
         os.remove(self.name[:len(self.name) - 3] + 'mp3')
-        # merge = subprocess.Popen(['ffmpeg', '-i', self.name, '-i',
-        #                   self.name[:len(self.name) - 3] + 'mp3',
-        #                   '-c', 'copy', 'output.mp4'])
-        # process_merge = subprocess.Popen(
-        #     ['ffmpeg', '-i', self.name, '-i', self.name[:len(self.name) - 3] + 'mp3', '-c', 'copy', finish],
-        #     stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        # while self.isMerge:
-        #     if "" == pipe.stdout.readline():
-        #         print("Success")
-        #         self.isMerge = False
-        #     if not "" == pipe.stderr.readline():
-        #         print("Error")
-        #         self.isMerge = False
+        print(self.args)
+        path = os.getcwd()
+        #todo Сделать python3 под ubuntu
+        os.chdir("..\\opencast_uploader")
+
+        qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
+                              str(self.args[1].split()[0].replace(':','_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+                              ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\' + 'final_'+self.name)
+
+        # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
+
         logger.info('end of recording')
 
 
@@ -118,8 +100,8 @@ class SingleStream(QObject):
             #     self.common_string
             # )
             ret, frame = self.vcap.read()
-            self.newTextAndColor.emit(frame)
-            # QThread.msleep(10)
+            if ret:
+                self.newTextAndColor.emit(frame)
         self.vcap.release()
 
 

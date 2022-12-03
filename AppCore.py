@@ -12,7 +12,6 @@ from datetime import datetime
 import time
 import logging
 import subprocess
-import ffmpeg
 
 
 config = configparser.ConfigParser()

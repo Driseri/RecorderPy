@@ -12,7 +12,7 @@ from datetime import datetime
 import time
 import logging
 import subprocess
-
+from pprint import pprint
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -22,6 +22,7 @@ logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler(stream=sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='[%(asctime)s: %(levelname)s] %(message)s'))
 logger.addHandler(handler)
+os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;udp'
 
 DISK = config["main"]["disk"]
 ROOMS_FILE = config["main"]["cameras"]
@@ -64,14 +65,16 @@ class SavingStream(QThread):
         os.remove(self.name[:len(self.name) - 3] + 'mp3')
         print(self.args)
         path = os.getcwd()
-        #todo Сделать python3 под ubuntu
+        #os.chdir("../opencast_uploader")
         os.chdir("..\\opencast_uploader")
 
         qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
-                              str(self.args[1].split()[0].replace(':','_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-                              ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\' + 'final_'+self.name)
-
-        # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
+                              str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+                              ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\' + 'final_'+self.name, shell=True)
+        # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
+        #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
+        # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
 
         logger.info('end of recording')
 
@@ -185,25 +188,24 @@ class AppCore(QObject):
         cv2.setWindowProperty("main", 0, 1)
         cv2.moveWindow('main', 800, 0)
         self.thread = QThread()
-        # create object which will be moved to another thread
         self.singleStream = SingleStream()
-        # move object to another thread
         self.singleStream.moveToThread(self.thread)
-        # after that, we can connect signals from this object to slot in GUI thread
         self.singleStream.newTextAndColor.connect(self.addNewTextAndColor)
-        # connect started signal to run method of object in another thread
         self.thread.started.connect(self.singleStream.run)
-        # start thread
         self.thread.start()
 
     @Slot(str)
     def getCams(self, str):
         list = []
+        self.select_rtsp.clear()
+
         self.current_room = str
         for camera in self.info[str]['cameras']:
             list.append({"name": camera['name'],
                          "type": camera['type'],
                          "rtsp": camera['rtsp_main']})
+            self.select_rtsp.append([camera['rtsp_main'],camera['name'], self.current_room])
+
 
         if len(self.info[str]['audio']) != 0:
             self.current_audio.append(self.info[str]['audio'][0])
@@ -248,7 +250,7 @@ class AppCore(QObject):
 
     @Slot(str, str)
     def addSelect(self, rtsp, name) -> None:
-        if rtsp in self.select_rtsp:
+        if [rtsp,name,self.current_room] in self.select_rtsp:
             self.select_rtsp.remove([rtsp, name, self.current_room])
         else:
             self.select_rtsp.append([rtsp, name, self.current_room])
@@ -259,12 +261,15 @@ class AppCore(QObject):
         self.select_rtsp.clear()
         print(self.select_rtsp)
 
+    #Тестовый на долгое нажатие
+    @Slot(str)
+    def goToView(self, rtsp) -> None:
+        self.singleStream.chngStream(rtsp)
+
     @Slot(str, str)
     def buttonReact(self, rtsp, name):
         if (self.isrecord):
             self.addSelect(rtsp, name)
-        else:
-            self.singleStream.chngStream(rtsp)
 
     def getFreeSpace(self) -> str:
         free = psutil.disk_usage(DISK).free / (1024 * 1024 * 1024)

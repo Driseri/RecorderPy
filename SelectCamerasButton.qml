@@ -6,7 +6,7 @@ import QtQuick.Layouts 1.12
 Rectangle {
     property int i: 0
     id: select
-    width: grid.cellWidth; height: grid.cellHeight * 0.3
+    width: grid.cellWidth; height: grid.cellHeight * 0.8
     radius: 5
     color: i % 2 == 0 ? "#01004e": "#bea18d"
     border.width: 2

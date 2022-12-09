@@ -28,6 +28,10 @@ Component {
         }
         MouseArea {
                 anchors.fill: parent
+                onPressAndHold: {
+                    appCore.goToView(model.rtsp)
+                    __gridview.currentIndex = index
+                }
                 onClicked: {
                     appCore.buttonReact(model.rtsp, model.name)
                     __gridview.currentIndex = index

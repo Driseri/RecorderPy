@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.12
 
 Rectangle {
     id: startRec
-    width: grid.cellWidth; height: grid.cellHeight * 0.3
+    width: grid.cellWidth; height: grid.cellHeight * 0.8
     radius: 5
     color: "#01004e"
     border.width: 2

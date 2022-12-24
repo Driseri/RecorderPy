@@ -14,7 +14,6 @@ if __name__ == "__main__":
     connector = Connector()
     appCore = AppCore(connector)
     videoModel = VideoModel(connector)
-
     # Подгрузка данных камер с API
     data = appCore.getCameras()
     #    models = CamerModel(data)

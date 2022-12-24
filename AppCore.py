@@ -92,6 +92,7 @@ class SingleStream(QObject):
 
     def chngStream(self, str):
         self.rtsp = str
+        #self.vcap.release()
         self.vcap = cv2.VideoCapture(self.rtsp)
 
     # method which will execute algorithm in another thread

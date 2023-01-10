@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.12
 
 Rectangle {
     id: clearChoi
-    width: grid.cellWidth; height: grid.cellHeight * 0.8
+    width: grid.cellWidth; height: grid.cellHeight * 0.4
     radius: 5
     color: clearChoiClick.containsPress ? "#bea18d" : "#01004e"
     border.width: 2
@@ -18,7 +18,7 @@ Rectangle {
         anchors.centerIn: parent
         width: parent.height / 1.2
         height: parent.height / 1.2
-        source: "./img/unselect.png"
+        source: "./img/del.png"
     }
     MouseArea {
         id: clearChoiClick

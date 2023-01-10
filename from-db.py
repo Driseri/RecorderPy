@@ -4,8 +4,7 @@ import os
 ROOMS_FILE = "db-rooms.json"
 
 with open(ROOMS_FILE, 'w') as file:
-    response = requests.get('https://nvr.miem.hse.ru/api/erudite/equipment',
-                            headers={'key': os.environ.get('ERUDITE_KEY')})
+    response = requests.get('https://nvr.miem.hse.ru/api/erudite/equipment',headers={'key': os.environ.get('ERUDITE_KEY')})
 
     response = response.content.decode('utf8').replace("'", '"')
     data = json.loads(response)

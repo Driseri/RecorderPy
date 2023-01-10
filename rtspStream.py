@@ -3,7 +3,7 @@ import time
 
 time1 = time.perf_counter()
 
-vcap = cv2.VideoCapture("rtsp://172.18.191.96:554/Streaming/Channels/1")
+vcap = cv2.VideoCapture(0)
 # vcap = cv2.VideoCapture("Мужчина.avi")
 frame_width = int(vcap.get(3))
 frame_height = int(vcap.get(4))

@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.12
 
 Rectangle {
     id: choi
-    width: grid.cellWidth; height: grid.cellHeight * 0.8
+    width: grid.cellWidth; height: grid.cellHeight * 0.4
     radius: 5
     color: choiClick.containsPress ? "#bea18d" : "#01004e"
     border.width: 2

@@ -43,54 +43,71 @@ class SavingStream(QThread):
 
     def run(self):
         process_video = subprocess.Popen(
-            ['ffmpeg', '-i', self.rtsp, self.name],
+            ['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps', '1', '-rtsp_transport', 'tcp',
+             '-i', self.rtsp, '-map_metadata', '0', '-t', '480', '-c:v', 'copy', '-an', self.name],
             stdin=subprocess.PIPE)
-        process_audio = subprocess.Popen(
-            ['ffmpeg', '-i', self.audio, self.name[:len(self.name) - 3] + 'mp3'],
-            stdin=subprocess.PIPE)
+        if (self.audio != ""):
+            process_audio = subprocess.Popen(
+                ['ffmpeg', '-i', self.audio, self.name[:len(self.name) - 3] + 'mp3'],
+                stdin=subprocess.PIPE)
         while True:
             if self.isRecord == False:
                 process_video.communicate(b'q')
-                process_audio.communicate(b'q')
+                if (self.audio != ""):
+                    process_audio.communicate(b'q')
                 time.sleep(1)
                 break
 
         for i in range(3):
             print(i)
             time.sleep(1)
-        code = subprocess.call(['ffmpeg', '-i', self.name, '-i', self.name[:len(self.name) - 3] + 'mp3',
-                             '-c',  'copy',  'final_'+self.name])
-        time.sleep(1)
-        os.remove(self.name)
-        os.remove(self.name[:len(self.name) - 3] + 'mp3')
-        print(self.args)
-        path = os.getcwd()
-        #os.chdir("../opencast_uploader")
-        os.chdir("..\\opencast_uploader")
+        if (self.audio != ""):
+            code = subprocess.call(['ffmpeg', '-i', self.name, '-i', self.name[:len(self.name) - 3] + 'mp3',
+                                 '-c',  'copy',  'final_'+self.name])
+            time.sleep(1)
+            #os.remove(self.name)
+            #os.remove(self.name[:len(self.name) - 3] + 'mp3')
+            print(self.args)
+            path = os.getcwd()
+            #os.chdir("../opencast_uploader")
+            os.chdir("..\\opencast_uploader")
 
-        qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
-                              str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-                              ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\' + 'final_'+self.name, shell=True)
-        # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
-        #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
-        # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
+            qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
+                                  str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+                                  ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\' + 'final_'+self.name, shell=True)
+            # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
+            #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+            #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
+            # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
+        else:
+            path = os.getcwd()
+            # os.chdir("../opencast_uploader")
+            os.chdir("..\\opencast_uploader")
+
+            qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
+                                  str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+                                  ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\'  + self.name, shell=True)
+            # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
+            #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+            #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
+            # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
 
         logger.info('end of recording')
-
+#ffmpeg -thread_queue_size 1024 
 
 class SingleStream(QObject):
     '''Отдельнй поток под вывод изображения с камеры'''
     running = False
     newTextAndColor = Signal(ndarray)
     rtsp = ""
-
+    errors_count = 0
     vcap = cv2.VideoCapture('rtsp://172.18.191.54:554/Streaming/Channels/1')
-
+    timeflow = 0
     def __init__(self, parent=None):
         super(SingleStream, self).__init__(parent)
 
     def chngStream(self, str):
+        # self.timeflow = time.time()
         self.rtsp = str
         #self.vcap.release()
         self.vcap = cv2.VideoCapture(self.rtsp)
@@ -105,7 +122,12 @@ class SingleStream(QObject):
             ret, frame = self.vcap.read()
             if ret:
                 self.newTextAndColor.emit(frame)
-        self.vcap.release()
+            # else:
+            #     self.errors_count = self.errors_count + 1
+            #     print(self.errors_count, time.time()-self.timeflow)
+            #     self.vcap.release()
+            #     self.vcap = cv2.VideoCapture(self.rtsp)
+
 
 
 class Connector():
@@ -209,9 +231,9 @@ class AppCore(QObject):
 
 
         if len(self.info[str]['audio']) != 0:
+            self.current_audio.clear()
             self.current_audio.append(self.info[str]['audio'][0])
             self.current_audio.append(str + '.mp3')
-
         # Изменить отправку на изменение
         self.connector.changeList(list)
 
@@ -295,11 +317,14 @@ class AppCore(QObject):
     def StartRecording(self):
         logger.info('trigger of slot StartRecording')
         string = 'naming'
+        audio_rtsp = ""
         integer = 1
         for rtsp in self.select_rtsp:
             naming = self.videoNaming(rtsp[1])
-            audio_rtsp = self.current_audio[0]['rtsp_main']
-            audio_file = self.current_audio[1]
+            if self.current_audio:
+                print(self.current_audio)
+                audio_rtsp = self.current_audio[0]['rtsp_main']
+                audio_file = self.current_audio[1]
             timing = datetime.now()
             args = [rtsp[2], rtsp[1], timing.year, timing.day, timing.month, timing.hour, timing.minute]
             threadRecord = SavingStream(rtsp[0], naming, audio_rtsp, args)

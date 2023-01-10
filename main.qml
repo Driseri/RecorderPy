@@ -21,6 +21,10 @@ Window {
 
     Page {
         id: page
+        property string currRoom: "cocky"
+        property string currCam: "pocky"
+        property string selectRoom: "suki"
+        property int isSelection: 0
         anchors.fill: parent
         footer: Rectangle {
             id: footer
@@ -55,25 +59,68 @@ Window {
 
         Rectangle {
             id: screen
-            height: parent.height
+            height: parent.height * 0.6
             width: parent.width - scrol.width
             anchors.right: parent.right
             color: "#ffecde"
 
             GridView {
                 id: grid
-                cellWidth: parent.width / 4 - 8
-                cellHeight: parent.height / 4 - 8
+                cellWidth: parent.width / 4 - 7.5
+                cellHeight: parent.height / 2 - 7.5
                 anchors.fill: parent
                 anchors.margins: 15
                 model: videoModel
                 delegate: ScreenDelegate {}
             }
-
-            StopRecordingButton {id: choi}
-            StartRecordingButton {id: startRec}
-            ClearChoiceButton {id: clearChoi}
-            SelectCamerasButton {id: select}
         }
+
+//            СПИСОК КАМЕР БЕЗ БЭКА
+//            ЕСЛИ РАСКОММЕНТИРОВАТЬ, ТО НУЖНО ПОМЕНЯТЬ У НИЖНЕГО RECTANGLE ВЫСОТУ НА (*0.15)
+
+//            Rectangle
+//            {
+//                id: list
+//                height: parent.height - buttons.height - screen.height
+//                width: parent.width - scrol.width
+//                color: "#ffecde"
+//                anchors.top: screen.bottom
+//                anchors.bottom: buttons.top
+//                anchors.right: parent.right
+//                border.color: "#01004e"
+//                border.width: 3
+//                radius: 10
+//                Text
+//                {
+//                    id: chosencameras
+//                    text: "Chosen cameras"
+//                    color: "#01004e"
+//                    anchors.horizontalCenter: parent.horizontalCenter
+//                    font.bold: true
+//                    font.pointSize: parent.width / 50
+//                }
+//                ListView
+//                {
+//                    id: listview1
+//                    anchors.fill: parent
+//                    anchors.margins: 25
+//                    spacing: 30
+//                    model: select_rtsp
+//                    delegate: ListDelegate {}
+//                }
+//            }
+
+            Rectangle{
+                id: buttons
+                height: parent.height * 0.4
+                width: parent.width - scrol.width
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                color: "#ffecde"
+                StopRecordingButton {id: choi}
+                StartRecordingButton {id: startRec}
+                ClearChoiceButton {id: clearChoi}
+                SelectCamerasButton {id: select}
+            }
     }
 }

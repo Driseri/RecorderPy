@@ -36,6 +36,15 @@ Component {
 //                    for(i = 0; i < grid.count + 1; i++)
 //                        grid.children[0].children[i].color = "#bea18d"
                     page.currRoom = buttonText.text
+                    console.log(grid.count)
+                    console.log(grid.children[0].text)
+//                    for(var j = 1; j < grid.count + 1; j++){
+//                        if (grid.children[0].children[j].children[0].text == page.currCam){
+//                            grid.children[0].children[j].color = "#bea18d";
+//                        }
+//
+//                    }
+
                 }
             }
     }

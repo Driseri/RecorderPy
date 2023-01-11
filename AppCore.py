@@ -42,55 +42,46 @@ class SavingStream(QThread):
         self.isRecord = False
 
     def run(self):
-        process_video = subprocess.Popen(
-            ['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps', '1', '-rtsp_transport', 'tcp',
-             '-i', self.rtsp, '-map_metadata', '0', '-t', '480', '-c:v', 'copy', '-an', self.name],
-            stdin=subprocess.PIPE)
-        if (self.audio != ""):
-            process_audio = subprocess.Popen(
-                ['ffmpeg', '-i', self.audio, self.name[:len(self.name) - 3] + 'mp3'],
-                stdin=subprocess.PIPE)
+        process_video = subprocess.Popen(['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps',
+                                          '1', '-rtsp_transport', 'tcp', '-i', self.rtsp,'-map_metadata', '0', '-map', '0', '-c:v', 'copy', '-an',
+                                          self.name], stdin=subprocess.PIPE)
+
+        process_audio = subprocess.Popen(['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps',
+                                          '1', '-rtsp_transport', 'tcp', '-i', self.audio, '-map_metadata', '0', '-map',
+                                          '0:1', '-c', 'copy', 'aud'+self.name], stdin=subprocess.PIPE)
+        # if (self.audio == ""):
+        #     process_video = subprocess.Popen(
+        #         ['ffmpeg', '-rtsp_transport', 'tcp', '-i', self.rtsp, '-map', '0:1', self.name], stdin=subprocess.PIPE)
+        # if (self.audio != ""):
+        #     pass
+
+            # process_video = subprocess.Popen(
+            #     ['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps', '1', '-rtsp_transport', 'tcp',
+            #      '-i',  self.audio, '-itsoffset', '00:00:1.800', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps', '1', '-rtsp_transport',
+            #      'tcp', '-i', self.rtsp, '-map', '0:0', '-map', '1:1', self.name],
+            #     stdin=subprocess.PIPE)
+
         while True:
             if self.isRecord == False:
                 process_video.communicate(b'q')
-                if (self.audio != ""):
-                    process_audio.communicate(b'q')
+                process_audio.communicate(b'q')
                 time.sleep(1)
                 break
 
         for i in range(3):
             print(i)
             time.sleep(1)
-        if (self.audio != ""):
-            code = subprocess.call(['ffmpeg', '-i', self.name, '-i', self.name[:len(self.name) - 3] + 'mp3',
-                                 '-c',  'copy',  'final_'+self.name])
-            time.sleep(1)
-            #os.remove(self.name)
-            #os.remove(self.name[:len(self.name) - 3] + 'mp3')
-            print(self.args)
-            path = os.getcwd()
-            #os.chdir("../opencast_uploader")
-            os.chdir("..\\opencast_uploader")
+        path = os.getcwd()
+        # os.chdir("../opencast_uploader")
+        #os.chdir("..\\opencast_uploader")
 
-            qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
-                                  str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-                                  ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\' + 'final_'+self.name, shell=True)
-            # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
-            #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-            #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
-            # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
-        else:
-            path = os.getcwd()
-            # os.chdir("../opencast_uploader")
-            os.chdir("..\\opencast_uploader")
-
-            qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
-                                  str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-                                  ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\'  + self.name, shell=True)
-            # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
-            #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-            #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
-            # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
+        # qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
+        #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\'  + self.name, shell=True)
+        # # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
+        #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
+        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
+        # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
 
         logger.info('end of recording')
 #ffmpeg -thread_queue_size 1024 
@@ -311,7 +302,7 @@ class AppCore(QObject):
     def videoNaming(self, name) -> str:
         return ((('_'.join(name.split())).replace(':', '_') +
                  '_' +
-                 ('_'.join(str(datetime.now()).split())).replace(':', '_')).replace('.', '_') + '.mp4')
+                 ('_'.join(str(datetime.now()).split())).replace(':', '_')).replace('.', '_') + '.mkv')
 
     @Slot()
     def StartRecording(self):

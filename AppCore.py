@@ -27,6 +27,28 @@ os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;udp'
 DISK = config["main"]["disk"]
 ROOMS_FILE = config["main"]["cameras"]
 
+class SavingCoder(QThread):
+    def __init__(self, audio, name, args, parent=None):
+        super(SavingCoder, self).__init__(parent)
+        self.audio = audio
+        self.args = args
+        self.name = name
+        self.isRecord = True
+
+    def stopRecording(self):
+        self.isRecord = False
+
+    def run(self):
+        process_audio = subprocess.Popen(['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps',
+                                          '1', '-rtsp_transport', 'tcp', '-i', self.audio, '-map_metadata', '0',
+                                          '-c', 'copy', 'aud' + self.name], stdin=subprocess.PIPE)
+
+        while True:
+            if self.isRecord == False:
+                process_audio.communicate(b'q')
+                time.sleep(1)
+                break
+
 class SavingStream(QThread):
     def __init__(self, rtsp, name, audio, args, parent=None):
         super(SavingStream, self).__init__(parent)
@@ -46,9 +68,9 @@ class SavingStream(QThread):
                                           '1', '-rtsp_transport', 'tcp', '-i', self.rtsp,'-map_metadata', '0', '-map', '0', '-c:v', 'copy', '-an',
                                           self.name], stdin=subprocess.PIPE)
 
-        process_audio = subprocess.Popen(['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps',
-                                          '1', '-rtsp_transport', 'tcp', '-i', self.audio, '-map_metadata', '0', '-map',
-                                          '0:1', '-c', 'copy', 'aud'+self.name], stdin=subprocess.PIPE)
+        #process_audio = subprocess.Popen(['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps',
+        #                                  '1', '-rtsp_transport', 'tcp', '-i', self.audio, '-map_metadata', '0', '-map',
+        #                                  '-c', 'copy', 'aud'+self.name], stdin=subprocess.PIPE)
         # if (self.audio == ""):
         #     process_video = subprocess.Popen(
         #         ['ffmpeg', '-rtsp_transport', 'tcp', '-i', self.rtsp, '-map', '0:1', self.name], stdin=subprocess.PIPE)
@@ -64,7 +86,7 @@ class SavingStream(QThread):
         while True:
             if self.isRecord == False:
                 process_video.communicate(b'q')
-                process_audio.communicate(b'q')
+                #process_audio.communicate(b'q')
                 time.sleep(1)
                 break
 
@@ -224,7 +246,7 @@ class AppCore(QObject):
         if len(self.info[str]['audio']) != 0:
             self.current_audio.clear()
             self.current_audio.append(self.info[str]['audio'][0])
-            self.current_audio.append(str + '.mp3')
+            self.current_audio.append(str)
         # Изменить отправку на изменение
         self.connector.changeList(list)
 
@@ -270,9 +292,11 @@ class AppCore(QObject):
             self.select_rtsp.append([rtsp, name, self.current_room])
         print(self.select_rtsp)
 
-    @Slot()
-    def clearSelected(self) -> None:
+    @Slot(str)
+    def clearSelected(self, room) -> None:
         self.select_rtsp.clear()
+        for camera in self.info[room]['cameras']:
+            self.select_rtsp.append([camera['rtsp_main'], camera['name'], self.current_room])
         print(self.select_rtsp)
 
     #Тестовый на долгое нажатие
@@ -310,13 +334,20 @@ class AppCore(QObject):
         string = 'naming'
         audio_rtsp = ""
         integer = 1
+        timing = datetime.now()
+        args_aud = [timing.year, timing.day, timing.month, timing.hour, timing.minute]
+        if self.current_audio:
+            print(self.current_audio)
+            audio_rtsp = self.current_audio[0]['rtsp_main']
+            audio_file = self.current_audio[1]
+            naming_aud = self.videoNaming(audio_file)
+            audioRecorder = SavingCoder(audio_rtsp, naming_aud, args_aud)
+            audioRecorder.start()
+            self.record_threads.append(audioRecorder)
+
         for rtsp in self.select_rtsp:
             naming = self.videoNaming(rtsp[1])
-            if self.current_audio:
-                print(self.current_audio)
-                audio_rtsp = self.current_audio[0]['rtsp_main']
-                audio_file = self.current_audio[1]
-            timing = datetime.now()
+            #naming_audio = self.videoNaming()
             args = [rtsp[2], rtsp[1], timing.year, timing.day, timing.month, timing.hour, timing.minute]
             threadRecord = SavingStream(rtsp[0], naming, audio_rtsp, args)
             threadRecord.start()

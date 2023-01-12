@@ -39,6 +39,7 @@ Rectangle {
                 page.isSelection = 1
             }
             if (i % 2 == 1) {
+                appCore.clearSelected(page.currRoom)
                 for(var j = 1; j < grid.count + 1; j++){
                     grid.children[0].children[j].color = "#01004e";
                 }

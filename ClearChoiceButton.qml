@@ -24,7 +24,7 @@ Rectangle {
         id: clearChoiClick
         anchors.fill: parent
         onClicked: {
-            appCore.clearSelected()
+            appCore.clearSelected(page.currRoom)
         }
     }
 }

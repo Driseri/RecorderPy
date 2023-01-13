@@ -46,8 +46,11 @@ class SavingCoder(QThread):
         while True:
             if self.isRecord == False:
                 process_audio.communicate(b'q')
-                time.sleep(1)
                 break
+
+
+
+
 
 class SavingStream(QThread):
     def __init__(self, rtsp, name, audio, args, parent=None):
@@ -68,42 +71,36 @@ class SavingStream(QThread):
                                           '1', '-rtsp_transport', 'tcp', '-i', self.rtsp,'-map_metadata', '0', '-map', '0', '-c:v', 'copy', '-an',
                                           self.name], stdin=subprocess.PIPE)
 
-        #process_audio = subprocess.Popen(['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps',
-        #                                  '1', '-rtsp_transport', 'tcp', '-i', self.audio, '-map_metadata', '0', '-map',
-        #                                  '-c', 'copy', 'aud'+self.name], stdin=subprocess.PIPE)
-        # if (self.audio == ""):
-        #     process_video = subprocess.Popen(
-        #         ['ffmpeg', '-rtsp_transport', 'tcp', '-i', self.rtsp, '-map', '0:1', self.name], stdin=subprocess.PIPE)
-        # if (self.audio != ""):
-        #     pass
-
-            # process_video = subprocess.Popen(
-            #     ['ffmpeg', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps', '1', '-rtsp_transport', 'tcp',
-            #      '-i',  self.audio, '-itsoffset', '00:00:1.800', '-thread_queue_size', '1024', '-use_wallclock_as_timestamps', '1', '-rtsp_transport',
-            #      'tcp', '-i', self.rtsp, '-map', '0:0', '-map', '1:1', self.name],
-            #     stdin=subprocess.PIPE)
 
         while True:
             if self.isRecord == False:
                 process_video.communicate(b'q')
-                #process_audio.communicate(b'q')
                 time.sleep(1)
                 break
 
         for i in range(3):
             print(i)
             time.sleep(1)
-        path = os.getcwd()
+
+        ewq = subprocess.call('ffmpeg -i ' + self.name + ' -i ' + 'aud' + self.audio + ' -c:v ' + 'copy ' + '-c:a ' + 'copy ' +
+                              'final' + self.name, shell=True)
+        # path = os.getcwd()
         # os.chdir("../opencast_uploader")
         #os.chdir("..\\opencast_uploader")
 
         # qwe = subprocess.call('python ..\\opencast_uploader\\video_uploader.py ' + str(self.args[0]) + ' ' +
         #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\'  + self.name, shell=True)
-        # # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
+        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '\\\\'  +'final' + self.name, shell=True)
+        # # # qwe = subprocess.call('python3 video_uploader.py ' + str(self.args[0]) + ' ' +
         #                       str(self.args[1].split()[0].replace(':', '_')) + ' ' + str(self.args[2]) + ' ' + str(self.args[3]) +
-        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final_'+self.name, shell=True)
-        # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final_'+self.name)
+        #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final'+self.name, shell=True)
+        # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final'+self.name)
+
+
+
+
+
+
 
         logger.info('end of recording')
 #ffmpeg -thread_queue_size 1024 
@@ -219,6 +216,7 @@ class AppCore(QObject):
         self.isrecord = False
         self.vcap = 0
         self.current_audio = []
+        self.list_files = []
         cv2.namedWindow("main", cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('main', 900, 900)
         cv2.setWindowProperty("main", 0, 1)
@@ -247,6 +245,7 @@ class AppCore(QObject):
             self.current_audio.clear()
             self.current_audio.append(self.info[str]['audio'][0])
             self.current_audio.append(str)
+        print(self.current_audio)
         # Изменить отправку на изменение
         self.connector.changeList(list)
 
@@ -296,6 +295,7 @@ class AppCore(QObject):
     def clearSelected(self, room) -> None:
         self.select_rtsp.clear()
         for camera in self.info[room]['cameras']:
+
             self.select_rtsp.append([camera['rtsp_main'], camera['name'], self.current_room])
         print(self.select_rtsp)
 
@@ -323,6 +323,9 @@ class AppCore(QObject):
         for threads in self.record_threads:
             threads.stopRecording()
 
+
+
+
     def videoNaming(self, name) -> str:
         return ((('_'.join(name.split())).replace(':', '_') +
                  '_' +
@@ -336,20 +339,22 @@ class AppCore(QObject):
         integer = 1
         timing = datetime.now()
         args_aud = [timing.year, timing.day, timing.month, timing.hour, timing.minute]
+
         if self.current_audio:
             print(self.current_audio)
             audio_rtsp = self.current_audio[0]['rtsp_main']
             audio_file = self.current_audio[1]
             naming_aud = self.videoNaming(audio_file)
+            self.list_files.append(naming_aud)
             audioRecorder = SavingCoder(audio_rtsp, naming_aud, args_aud)
             audioRecorder.start()
             self.record_threads.append(audioRecorder)
 
         for rtsp in self.select_rtsp:
             naming = self.videoNaming(rtsp[1])
-            #naming_audio = self.videoNaming()
+            self.list_files.append(naming)
             args = [rtsp[2], rtsp[1], timing.year, timing.day, timing.month, timing.hour, timing.minute]
-            threadRecord = SavingStream(rtsp[0], naming, audio_rtsp, args)
+            threadRecord = SavingStream(rtsp[0], naming, naming_aud, args)
             threadRecord.start()
             self.record_threads.append(threadRecord)
             integer = integer + 1

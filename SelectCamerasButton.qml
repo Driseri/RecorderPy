@@ -26,7 +26,6 @@ Rectangle {
         anchors.fill: parent
         onClicked: {
             appCore.setRecord()
-            // #todo сделать выделение выбранных для записи
             console.log("____________________")
             if (i % 2 == 0) {
                 for(var j = 1; j < grid.count + 1; j++){

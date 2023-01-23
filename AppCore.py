@@ -5,6 +5,7 @@ import sys
 import psutil
 import configparser
 import cv2
+import vlc
 from PySide2.QtCore import QObject, QAbstractListModel, Qt, Slot, Signal, QModelIndex, Property, QThread
 from PySide2.QtGui import *
 from numpy import *
@@ -26,6 +27,114 @@ os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;udp'
 
 DISK = config["main"]["disk"]
 ROOMS_FILE = config["main"]["cameras"]
+
+class Player(QThread):
+    def __init__(self, *args, parent=None):
+        super(Player, self).__init__(parent)
+        if args:
+            instance = vlc.Instance(*args)
+            self.media = instance.media_player_new()
+        else:
+            self.media = vlc.MediaPlayer()
+
+    # Set the URL address or local file path to be played, and the resource will be reloaded every time it is called
+    def set_uri(self, uri):
+        self.media.set_mrl(uri)
+
+    # Play success returns 0, failure returns -1
+    def play(self, path=None):
+        if path:
+            self.set_uri(path)
+            return self.media.play()
+        else:
+            return self.media.play()
+
+    # time out
+    def pause(self):
+        self.media.pause()
+
+    # Restore
+    def resume(self):
+        self.media.set_pause(0)
+
+    # stop
+    def stop(self):
+        self.media.stop()
+
+    # Release resources
+    def release(self):
+        return self.media.release()
+
+    # Is it playing
+    def is_playing(self):
+        return self.media.is_playing()
+
+    # Elapsed time, return millisecond value
+    def get_time(self):
+        return self.media.get_time()
+
+    # Drag the specified millisecond value to play. Return 0 on success, -1 on failure (note that only the current multimedia format or streaming media protocol support will take effect)
+    def set_time(self, ms):
+        return self.media.get_time()
+
+    # The total length of audio and video, returns the value in milliseconds
+    def get_length(self):
+        return self.media.get_length()
+
+    # Get the current volume (0~100)
+    def get_volume(self):
+        return self.media.audio_get_volume()
+
+    # Set the volume (0~100)
+    def set_volume(self, volume):
+        return self.media.audio_set_volume(volume)
+
+    # Return to the current state: playing; paused; other
+    def get_state(self):
+        state = self.media.get_state()
+        if state == vlc.State.Playing:
+            return 1
+        elif state == vlc.State.Paused:
+            return 0
+        else:
+            return -1
+
+    # Current playback progress. Returns a floating point number between 0.0 and 1.0
+    def get_position(self):
+        return self.media.get_position()
+
+    # Drag the current progress and pass in a floating point number between 0.0 and 1.0 (note that only the current multimedia format or streaming protocol support will take effect)
+    def set_position(self, float_val):
+        return self.media.set_position(float_val)
+
+    # Get the current file playback rate
+    def get_rate(self):
+        return self.media.get_rate()
+
+    # Set the playback rate (for example: 1.2, which means to speed up the playback by 1.2 times)
+    def set_rate(self, rate):
+        return self.media.set_rate(rate)
+
+    # Set the aspect ratio (such as "16:9", "4:3")
+    def set_ratio(self, ratio):
+        self.media.video_set_scale(0)  # Must be set to 0, otherwise the screen width and height cannot be modified
+        self.media.video_set_aspect_ratio(ratio)
+
+    # Register listener
+    def add_callback(self, event_type, callback):
+        self.media.event_manager().event_attach(event_type, callback)
+
+    # Remove listener
+    def remove_callback(self, event_type, callback):
+        self.media.event_manager().event_detach(event_type, callback)
+
+
+    def run(self):
+        self.play("rtsp://172.18.191.38/305/2")
+        while True:
+            pass
+
+
 
 class SavingCoder(QThread):
     def __init__(self, audio, name, args, parent=None):
@@ -96,47 +205,41 @@ class SavingStream(QThread):
         #                       ' ' + str(self.args[4]) + ' ' + str(self.args[5]) + ' ' + str(self.args[6]) + ' ' + path + '//' + 'final'+self.name, shell=True)
         # # print(self.args[0],self.args[1].split()[0].replace(':','_'),self.args[2],self.args[3],self.args[4], self.args[5], self.args[6], 'final'+self.name)
 
-
-
-
-
-
-
         logger.info('end of recording')
-#ffmpeg -thread_queue_size 1024 
 
-class SingleStream(QObject):
-    '''Отдельнй поток под вывод изображения с камеры'''
-    running = False
-    newTextAndColor = Signal(ndarray)
-    rtsp = ""
-    errors_count = 0
-    vcap = cv2.VideoCapture('rtsp://172.18.191.54:554/Streaming/Channels/1')
-    timeflow = 0
-    def __init__(self, parent=None):
-        super(SingleStream, self).__init__(parent)
-
-    def chngStream(self, str):
-        # self.timeflow = time.time()
-        self.rtsp = str
-        #self.vcap.release()
-        self.vcap = cv2.VideoCapture(self.rtsp)
-
-    # method which will execute algorithm in another thread
-    def run(self):
-        while True:
-            # send signal with new text and color from aonther thread
-            # self.newTextAndColor.emit(
-            #     self.common_string
-            # )
-            ret, frame = self.vcap.read()
-            if ret:
-                self.newTextAndColor.emit(frame)
-            # else:
-            #     self.errors_count = self.errors_count + 1
-            #     print(self.errors_count, time.time()-self.timeflow)
-            #     self.vcap.release()
-            #     self.vcap = cv2.VideoCapture(self.rtsp)
+#
+# class SingleStream(QObject):
+#     '''Отдельнй поток под вывод изображения с камеры'''
+#     running = False
+#     newTextAndColor = Signal(ndarray)
+#     rtsp = ""
+#     errors_count = 0
+#     vcap = cv2.VideoCapture('rtsp://172.18.191.54:554/Streaming/Channels/1', cv2.CAP_FFMPEG)
+#     timeflow = 0
+#     def __init__(self, parent=None):
+#         super(SingleStream, self).__init__(parent)
+#
+#     def chngStream(self, str):
+#         # self.timeflow = time.time()
+#         self.rtsp = str
+#         #self.vcap.release()
+#         self.vcap = cv2.VideoCapture(self.rtsp, cv2.CAP_FFMPEG)
+#
+#     # method which will execute algorithm in another thread
+#     def run(self):
+#         while True:
+#             # send signal with new text and color from aonther thread
+#             # self.newTextAndColor.emit(
+#             #     self.common_string
+#             # )
+#             ret, frame = self.vcap.read()
+#             if ret:
+#                 self.newTextAndColor.emit(frame)
+#             # else:
+#             #     self.errors_count = self.errors_count + 1
+#             #     print(self.errors_count, time.time()-self.timeflow)
+#             #     self.vcap.release()
+#             #     self.vcap = cv2.VideoCapture(self.rtsp)
 
 
 
@@ -217,16 +320,19 @@ class AppCore(QObject):
         self.vcap = 0
         self.current_audio = []
         self.list_files = []
-        cv2.namedWindow("main", cv2.WINDOW_NORMAL)
+        #
+        self.player = Player()
+        self.player.start()
+        # cv2.namedWindow("main", cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('main', 900, 900)
-        cv2.setWindowProperty("main", 0, 1)
-        cv2.moveWindow('main', 800, 0)
-        self.thread = QThread()
-        self.singleStream = SingleStream()
-        self.singleStream.moveToThread(self.thread)
-        self.singleStream.newTextAndColor.connect(self.addNewTextAndColor)
-        self.thread.started.connect(self.singleStream.run)
-        self.thread.start()
+        # cv2.setWindowProperty("main", 0, 1)
+        # cv2.moveWindow('main', 800, 0)
+        # self.thread = QThread()
+        # self.singleStream = SingleStream()
+        # self.singleStream.moveToThread(self.thread)
+        # self.singleStream.newTextAndColor.connect(self.addNewTextAndColor)
+        # self.thread.started.connect(self.singleStream.run)
+        # self.thread.start()
 
     @Slot(str)
     def getCams(self, str):
@@ -299,10 +405,10 @@ class AppCore(QObject):
             self.select_rtsp.append([camera['rtsp_main'], camera['name'], self.current_room])
         print(self.select_rtsp)
 
-    #Тестовый на долгое нажатие
+    # Тестовый на долгое нажатие
     @Slot(str)
     def goToView(self, rtsp) -> None:
-        self.singleStream.chngStream(rtsp)
+        self.player.play(rtsp)
 
     @Slot(str, str)
     def buttonReact(self, rtsp, name):
@@ -313,9 +419,9 @@ class AppCore(QObject):
         free = psutil.disk_usage(DISK).free / (1024 * 1024 * 1024)
         return (f"{free:.4} Gb free on disk {DISK}")
 
-    @Slot(ndarray)
-    def addNewTextAndColor(self, string):
-        cv2.imshow('main', string)
+    # @Slot(ndarray)
+    # def addNewTextAndColor(self, string):
+    #     cv2.imshow('main', string)
 
     @Slot()
     def recStop(self):

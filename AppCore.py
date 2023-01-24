@@ -28,6 +28,25 @@ os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;udp'
 DISK = config["main"]["disk"]
 ROOMS_FILE = config["main"]["cameras"]
 
+
+class FFplayer(QThread):
+
+    def __init__(self, parent=None):
+        super(FFplayer, self).__init__(parent)
+        self.prev1 = subprocess.Popen(['ffplay', 'rtsp://172.18.191.38/306/3', '-an', '-fs'], stdin=subprocess.PIPE)
+
+
+    def play(self, rtsp):
+        self.prev1.kill()
+        self.prev1 = subprocess.Popen(['ffplay', rtsp, '-an', '-fs'], stdin=subprocess.PIPE)
+
+    def run(self):
+        while True:
+            pass
+
+
+
+
 class Player(QThread):
     def __init__(self, *args, parent=None):
         super(Player, self).__init__(parent)
@@ -321,8 +340,10 @@ class AppCore(QObject):
         self.current_audio = []
         self.list_files = []
         #
-        self.player = Player()
-        self.player.start()
+        self.fplayer = FFplayer()
+        self.fplayer.start()
+        # self.player = Player()
+        # self.player.start()
         # cv2.namedWindow("main", cv2.WINDOW_NORMAL)
         # cv2.resizeWindow('main', 900, 900)
         # cv2.setWindowProperty("main", 0, 1)
@@ -408,7 +429,7 @@ class AppCore(QObject):
     # Тестовый на долгое нажатие
     @Slot(str)
     def goToView(self, rtsp) -> None:
-        self.player.play(rtsp)
+        self.fplayer.play(rtsp)
 
     @Slot(str, str)
     def buttonReact(self, rtsp, name):

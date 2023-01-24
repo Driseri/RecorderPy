@@ -33,12 +33,12 @@ class FFplayer(QThread):
 
     def __init__(self, parent=None):
         super(FFplayer, self).__init__(parent)
-        self.prev1 = subprocess.Popen(['ffplay', 'rtsp://172.18.191.38/306/3', '-an', '-fs'], stdin=subprocess.PIPE)
+        self.prev1 = subprocess.Popen(['ffplay', 'rtsp://172.18.191.38/306/3', '-an', '-x', '1280'], stdin=subprocess.PIPE)
 
 
     def play(self, rtsp):
         self.prev1.kill()
-        self.prev1 = subprocess.Popen(['ffplay', rtsp, '-an', '-fs'], stdin=subprocess.PIPE)
+        self.prev1 = subprocess.Popen(['ffplay', rtsp, '-an', '-x', '1280'], stdin=subprocess.PIPE)
 
     def run(self):
         while True:

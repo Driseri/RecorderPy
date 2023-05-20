@@ -7,10 +7,8 @@ Rectangle {
     id: startRec
     width: grid.cellWidth; height: grid.cellHeight * 0.4
     radius: 5
-    color: "#01004e"
-    border.width: 2
-    border.color: "#01004e"
-    anchors.right: choi.left
+    color: "lightgrey"
+    anchors.right: stopRec.left
     anchors.bottom: parent.bottom
     anchors.margins: 10
     Image {
@@ -21,10 +19,24 @@ Rectangle {
         source: "./img/record.png"
     }
     MouseArea {
+        id: startRecClick
         anchors.fill: parent
         onClicked: {
-            appCore.StartRecording()
-            parent.color = "#bea18d"
+            parent.color = "#01004e";
+
+////          из функции StartRecording надо вернуть 2 аргумента: кол-во памяти, занимаемой записями,
+////          и флаг начатия записи
+            if (page.isRecording == 0) {
+                res = appCore.StartRecording();
+            }
+            page.isRecording = 1;
+//            if (res[0] > максимальный объем доступной памяти)
+//                memorypopup.open()
+//            else
+////          тут вместо 0 вставить то, что возвращается при неуспешном начатии записи
+//                if(res[1] === 0)
+//                    popup.open()
+
         }
     }
 }

@@ -7,11 +7,10 @@ Rectangle {
     id: clearChoi
     width: grid.cellWidth; height: grid.cellHeight * 0.4
     radius: 5
-    color: clearChoiClick.containsPress ? "#bea18d" : "#01004e"
-    border.width: 2
-    border.color: "#01004e"
+    color: clearChoiClick.containsPress ? "#01004e" : "lightgrey"
     anchors.right: startRec.left
     anchors.bottom: parent.bottom
+    anchors.left: parent.left
     anchors.margins: 10
     Image {
         id: img3
@@ -24,7 +23,7 @@ Rectangle {
         id: clearChoiClick
         anchors.fill: parent
         onClicked: {
-            appCore.clearSelected(page.currRoom)
+            appCore.clearSelected()
         }
     }
 }
